@@ -48,3 +48,10 @@ In this special launch file is included tested launch file which runs
 target ros node and load parameters. The special launch file also launch
 testing node which consist of python unittests, this node interact with
 tested node and perform tests.
+
+## Troubleshooting
+
+You don't run python tests using command `catkin_make run_tests_phoxi_camera_...` 
+but via `rostest phoxi_camera test_name`.
+If tests are failed in setUpClass restart PhoXiControl or better kill and 
+remove your docker and create new. 
