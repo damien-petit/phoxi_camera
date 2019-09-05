@@ -13,7 +13,8 @@
 #include <vector>
 
 using namespace std;
-PhoXiInterface phoxi_interface;
+phoxi_camera::PhoXiInterface phoxi_interface;
+long sleepPhoXiFactory = 1500000;
 
 class PhoXiInterfaceTest : public testing::Test {
 public:
@@ -25,11 +26,12 @@ public:
     }
 
     virtual void SetUp() {
+        usleep(sleepPhoXiFactory);
         phoxi_interface.connectCamera(camera_ID);
+        usleep(sleepPhoXiFactory);
     }
 
     virtual void TearDown() {
-        phoxi_interface.disconnectCamera();
     }
 };
 
@@ -44,7 +46,9 @@ public:
     }
 
     virtual void TearDown() {
+        usleep(sleepPhoXiFactory);
         phoxi_interface.disconnectCamera();
+        usleep(sleepPhoXiFactory);
     }
 };
 
@@ -54,9 +58,9 @@ TEST_F (PhoXiInterfaceTestConnection, connect) {
     string incorrect_camera_ID = "000000";
 
     // try to connect to unreachable scanner
-    ASSERT_THROW(phoxi_interface.connectCamera(incorrect_camera_ID), PhoXiScannerNotFound);
+    ASSERT_THROW(phoxi_interface.connectCamera(incorrect_camera_ID), phoxi_camera::PhoXiScannerNotFound);
     ASSERT_FALSE(phoxi_interface.isConnected());
-    EXPECT_THROW(phoxi_interface.isOk(), PhoXiScannerNotConnected);
+    EXPECT_THROW(phoxi_interface.isOk(), phoxi_camera::PhoXiScannerNotConnected);
 
     //  try to connect to reachable scanner
     ASSERT_NO_THROW(phoxi_interface.connectCamera(camera_ID));
@@ -69,7 +73,7 @@ TEST_F (PhoXiInterfaceTestConnection, connect) {
     ASSERT_NO_THROW(phoxi_interface.isOk());
 
     // I am connected to scanner, now try to connect to unreachable scanner
-    ASSERT_THROW(phoxi_interface.connectCamera(incorrect_camera_ID), PhoXiScannerNotFound);
+    ASSERT_THROW(phoxi_interface.connectCamera(incorrect_camera_ID), phoxi_camera::PhoXiScannerNotFound);
     ASSERT_TRUE(phoxi_interface.isConnected());     // I am still connected to previous scanner
     ASSERT_NO_THROW(phoxi_interface.isOk());
 
@@ -102,11 +106,11 @@ TEST_F (PhoXiInterfaceTestConnection, disconnect) {
     phoxi_interface.connectCamera(camera_ID);
     ASSERT_NO_THROW(phoxi_interface.isOk());
     ASSERT_NO_THROW(phoxi_interface.disconnectCamera());
-    ASSERT_THROW(phoxi_interface.isOk(), PhoXiScannerNotConnected);
+    ASSERT_THROW(phoxi_interface.isOk(), phoxi_camera::PhoXiScannerNotConnected);
 
     // try disconnect camera when I am disconnected
     ASSERT_NO_THROW(phoxi_interface.disconnectCamera());
-    ASSERT_THROW(phoxi_interface.isOk(), PhoXiScannerNotConnected);
+    ASSERT_THROW(phoxi_interface.isOk(), phoxi_camera::PhoXiScannerNotConnected);
 }
 
 TEST_F (PhoXiInterfaceTest, isOK) {
@@ -116,7 +120,7 @@ TEST_F (PhoXiInterfaceTest, isOK) {
 
     phoxi_interface.disconnectCamera();
 
-    ASSERT_THROW(phoxi_interface.isOk(), PhoXiScannerNotConnected);
+    ASSERT_THROW(phoxi_interface.isOk(), phoxi_camera::PhoXiScannerNotConnected);
 
     // TODO call isOK when PhoXi is off
 }
@@ -155,8 +159,8 @@ TEST_F (PhoXiInterfaceTest, start_stopAcquisition) {
 
     // after disconnect
     phoxi_interface.disconnectCamera();
-    ASSERT_THROW(phoxi_interface.startAcquisition(), PhoXiScannerNotConnected);
-    ASSERT_THROW(phoxi_interface.stopAcquisition(), PhoXiScannerNotConnected);
+    ASSERT_THROW(phoxi_interface.startAcquisition(), phoxi_camera::PhoXiScannerNotConnected);
+    ASSERT_THROW(phoxi_interface.stopAcquisition(), phoxi_camera::PhoXiScannerNotConnected);
 }
 
 TEST_F (PhoXiInterfaceTest, setTriggerMode) {
@@ -213,12 +217,12 @@ TEST_F (PhoXiInterfaceTest, setTriggerMode) {
 
     // incorrect parameters
     phoxi_interface.stopAcquisition();
-    ASSERT_THROW(phoxi_interface.setTriggerMode(-1,true),InvalidTriggerMode);
+    ASSERT_THROW(phoxi_interface.setTriggerMode(-1,true),phoxi_camera::InvalidTriggerMode);
     EXPECT_FALSE(phoxi_interface.isAcquiring());
 
     // try it without connection to camera
     phoxi_interface.disconnectCamera();
-    ASSERT_THROW(phoxi_interface.setTriggerMode(pho::api::PhoXiTriggerMode::Software), PhoXiScannerNotConnected);
+    ASSERT_THROW(phoxi_interface.setTriggerMode(pho::api::PhoXiTriggerMode::Software), phoxi_camera::PhoXiScannerNotConnected);
 }
 
 TEST_F (PhoXiInterfaceTest, setResolution) {
@@ -235,8 +239,8 @@ TEST_F (PhoXiInterfaceTest, setResolution) {
 
     // try it without connection to camera
     phoxi_interface.disconnectCamera();
-    ASSERT_THROW(phoxi_interface.setLowResolution(), PhoXiScannerNotConnected);
-    ASSERT_THROW(phoxi_interface.setHighResolution(), PhoXiScannerNotConnected);
+    ASSERT_THROW(phoxi_interface.setLowResolution(), phoxi_camera::PhoXiScannerNotConnected);
+    ASSERT_THROW(phoxi_interface.setHighResolution(), phoxi_camera::PhoXiScannerNotConnected);
 }
 
 TEST_F (PhoXiInterfaceTest, triggerImage) {
@@ -273,7 +277,7 @@ TEST_F (PhoXiInterfaceTest, triggerImage) {
 
     // try it without connection to camera
     phoxi_interface.disconnectCamera();
-    ASSERT_THROW(phoxi_interface.triggerImage(), PhoXiScannerNotConnected);
+    ASSERT_THROW(phoxi_interface.triggerImage(), phoxi_camera::PhoXiScannerNotConnected);
 }
 
 TEST_F (PhoXiInterfaceTest, getHardwareIdentification) {
@@ -282,7 +286,7 @@ TEST_F (PhoXiInterfaceTest, getHardwareIdentification) {
 
     // try it without connection to camera
     phoxi_interface.disconnectCamera();
-    ASSERT_THROW(phoxi_interface.getHardwareIdentification(), PhoXiScannerNotConnected);
+    ASSERT_THROW(phoxi_interface.getHardwareIdentification(), phoxi_camera::PhoXiScannerNotConnected);
 }
 
 TEST_F (PhoXiInterfaceTest, setTransformation) {
@@ -321,14 +325,14 @@ TEST_F (PhoXiInterfaceTest, setTransformation) {
     // MarkerSpace
     EXPECT_THROW(phoxi_interface.setTransformation(transformation,
                                                    pho::api::PhoXiCoordinateSpace::MarkerSpace,
-                                                   true, false), CoordinateSpaceNotSupported);
+                                                   true, false), phoxi_camera::CoordinateSpaceNotSupported);
     ASSERT_NO_THROW(phoxi_interface.triggerImage());
 
     // try it without connected camera
     phoxi_interface.disconnectCamera();
     ASSERT_THROW(phoxi_interface.setTransformation(transformation,
                                                    pho::api::PhoXiCoordinateSpace::CustomSpace,
-                                                   true, false), PhoXiScannerNotConnected);
+                                                   true, false), phoxi_camera::PhoXiScannerNotConnected);
 }
 
 TEST_F (PhoXiInterfaceTest, setCoordinateSpace) {
@@ -356,7 +360,7 @@ TEST_F (PhoXiInterfaceTest, setCoordinateSpace) {
     // try it without connection to camera
     phoxi_interface.disconnectCamera();
     ASSERT_THROW(phoxi_interface.setCoordinateSpace(pho::api::PhoXiCoordinateSpace::RobotSpace),
-                 PhoXiScannerNotConnected);
+                 phoxi_camera::PhoXiScannerNotConnected);
 }
 
 TEST_F (PhoXiInterfaceTest, getPFrame) {
@@ -375,11 +379,11 @@ TEST_F (PhoXiInterfaceTest, getPFrame) {
 
     // try it without connection to camera
     phoxi_interface.disconnectCamera();
-    ASSERT_THROW(phoxi_interface.getPFrame(-1), PhoXiScannerNotConnected);
+    ASSERT_THROW(phoxi_interface.getPFrame(-1), phoxi_camera::PhoXiScannerNotConnected);
 }
 
 TEST_F (PhoXiInterfaceTest, getPointCloudFromFrame) {
-    ASSERT_THROW(phoxi_interface.getPointCloudFromFrame(nullptr), CorruptedFrame);
+    ASSERT_THROW(phoxi_interface.getPointCloudFromFrame(nullptr), phoxi_camera::CorruptedFrame);
 
     pho::api::PFrame frame;
     frame = phoxi_interface.getPFrame(-1);
@@ -397,7 +401,7 @@ TEST_F (PhoXiInterfaceTest, getPointCloud) {
 
     // try it without connection to camera
     phoxi_interface.disconnectCamera();
-    ASSERT_THROW(phoxi_interface.getPointCloud(), PhoXiScannerNotConnected);
+    ASSERT_THROW(phoxi_interface.getPointCloud(), phoxi_camera::PhoXiScannerNotConnected);
 }
 
 TEST_F (PhoXiInterfaceTest, getSupportedCapturingModes) {
@@ -411,7 +415,7 @@ TEST_F (PhoXiInterfaceTest, getSupportedCapturingModes) {
 
     // try it without connection to camera
     phoxi_interface.disconnectCamera();
-    ASSERT_THROW(phoxi_interface.getSupportedCapturingModes(), PhoXiScannerNotConnected);
+    ASSERT_THROW(phoxi_interface.getSupportedCapturingModes(), phoxi_camera::PhoXiScannerNotConnected);
 }
 
 TEST_F (PhoXiInterfaceTest, cameraList) {

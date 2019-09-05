@@ -208,7 +208,7 @@ class Test_phoxi_camera_ros_interface(TestCase):
         assert True == res.success
         assert "Ok" == res.message
         assert published_topics_num == 4, "Some topic was not published after get_frame service"
-
+        # Todo confidence map is mepty
         # disconnected
         disconnect()
         res = srv_getFrame(-1)
@@ -220,7 +220,7 @@ class Test_phoxi_camera_ros_interface(TestCase):
         import os
         path = os.getcwd()  # it should be ~/.ros
         filename = "/file.ply"
-        os.system("rm " + path + filename)  # remove old file
+        os.system("rm -f " + path + filename)  # remove old file
 
         dir = os.listdir(path)
 
@@ -232,7 +232,7 @@ class Test_phoxi_camera_ros_interface(TestCase):
         assert True == res.success
         assert "Ok" == res.message
 
-        os.system("rm " + path + filename)  # remove created file
+        os.system("rm -f " + path + filename)  # remove created file
 
     def test_getHardwareIdentification(self):
         # connected
@@ -319,7 +319,7 @@ class Test_phoxi_camera_ros_interface(TestCase):
 
         path = os.getcwd() + '/'
         filenames = ["file.ply", "file.praw", "file.ptx"]
-        os.system("rm " + path + "*.ply " + path + "*.praw " + path + "*.ptx")  # remove old file if exist
+        os.system("rm -f " + path + "*.ply " + path + "*.praw " + path + "*.ptx")  # remove old file if exist
 
         for file in filenames:
             dir = os.listdir(path) # record files in directory
@@ -330,7 +330,7 @@ class Test_phoxi_camera_ros_interface(TestCase):
             assert dir.pop() == file
             assert True == res.success
             assert "Ok" == res.message
-            os.system("rm " + path + file)  # remove created file
+            os.system("rm -f " + path + file)  # remove created file
 
 
 if __name__ == '__main__':
