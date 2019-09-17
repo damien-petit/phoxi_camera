@@ -208,7 +208,6 @@ class Test_phoxi_camera_ros_interface(TestCase):
         assert True == res.success
         assert "Ok" == res.message
         assert published_topics_num == 4, "Some topic was not published after get_frame service"
-        # Todo confidence map is mepty
         # disconnected
         disconnect()
         res = srv_getFrame(-1)
