@@ -29,7 +29,8 @@
 
     <!--PhoXi3Dscanner L-->
     <xacro:macro name="PhoXi3DscannerL_default_sensor_origin">
-        <origin xyz="${(0.55 / 2.0)} 0.0168 0.035" rpy="0 -0.1649336 0" />
+        <!--origin xyz="${(0.55 / 2.0)} 0.0168 0.035" rpy="0 -0.1649336 0" /-->
+        <origin xyz="-0.274213 0.0299 0.0090044" rpy="0 ${-9.45/180*pi} ${pi}" />
     </xacro:macro>
     <xacro:macro name="PhoXi3DscannerL_meshes">
         <mesh filename="package://phoxi_camera/meshes/visual/PhoXi_L.f.STL" scale = "0.001 0.001 0.001"/>
