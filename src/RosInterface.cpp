@@ -27,6 +27,7 @@ RosInterface::RosInterface() : nh("~"), dynamicReconfigureServer(dynamicReconfig
     stopAcquisitionServiceV2 = nh.advertiseService("V2/stop_acquisition", (bool (RosInterface::*)(phoxi_camera::Empty::Request&, phoxi_camera::Empty::Response&))&RosInterface::startAcquisition, this);
     triggerImageService =nh.advertiseService("trigger_image", &RosInterface::triggerImage, this);
     getFrameService = nh.advertiseService("get_frame", &RosInterface::getFrame, this);
+    getCalibratedFrameService = nh.advertiseService("get_calibrated_frame", &RosInterface::getCalibratedFrame, this);
     saveFrameService = nh.advertiseService("save_frame", &RosInterface::saveFrame, this);
     disconnectCameraService = nh.advertiseService("disconnect_camera", &RosInterface::disconnectCamera, this);
     getHardwareIdentificationService = nh.advertiseService("get_hardware_indentification", &RosInterface::getHardwareIdentification, this);
@@ -166,6 +167,25 @@ bool RosInterface::triggerImage(phoxi_camera::TriggerImage::Request &req, phoxi_
 }
 bool RosInterface::getFrame(phoxi_camera::GetFrame::Request &req, phoxi_camera::GetFrame::Response &res){
     try {
+        pho::api::PFrame frame = getPFrame(req.in);
+        publishFrame(frame);
+        if(!frame){
+            res.success = false;
+            res.message = "Null frame!";
+        }
+        else{
+            res.success = true;
+            res.message = OKRESPONSE;
+        }
+    }catch (PhoXiInterfaceException &e){
+        res.success = false;
+        res.message = e.what();
+    }
+    return true;
+}
+bool RosInterface::getCalibratedFrame(phoxi_camera::GetCalibratedFrame::Request &req, phoxi_camera::GetCalibratedFrame::Response &res){
+    try {
+        getExternalCameraFrame("/camera/color/image_raw");
         pho::api::PFrame frame = getPFrame(req.in);
         publishFrame(frame);
         if(!frame){
@@ -483,6 +503,10 @@ pho::api::PFrame RosInterface::getPFrame(int id){
     dynamicReconfigureConfig.coordination_space = pho::api::PhoXiTriggerMode::Software;
     dynamicReconfigureServer.updateConfig(dynamicReconfigureConfig);
     return frame;
+}
+
+void RosInterface::getExternalCameraFrame(std::string topic_name){
+    //sensor_msgs::Image msg = ros::topic::waitForMessage<sensor_msgs::Image>(topic_name);
 }
 
 int RosInterface::triggerImage(){
