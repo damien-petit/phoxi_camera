@@ -185,9 +185,9 @@ bool RosInterface::getFrame(phoxi_camera::GetFrame::Request &req, phoxi_camera::
 }
 bool RosInterface::getCalibratedFrame(phoxi_camera::GetCalibratedFrame::Request &req, phoxi_camera::GetCalibratedFrame::Response &res){
     try {
-        getExternalCameraFrame("/camera/color/image_raw");
+        getExternalCameraFrame(req.topic_name);
         pho::api::PFrame frame = getPFrame(req.in);
-        publishFrame(frame);
+        publishCalibratedFrame(frame);
         if(!frame){
             res.success = false;
             res.message = "Null frame!";
@@ -352,6 +352,40 @@ void RosInterface::publishFrame(pho::api::PFrame frame) {
     depthMapPub.publish(depth_map);
 }
 
+void RosInterface::publishCalibratedFrame(pho::api::PFrame frame) {
+    if (!frame) {
+        ROS_WARN("NUll frame!");
+        return;
+    }
+    if (frame->PointCloud.Empty()){
+        ROS_WARN("Empty point cloud!");
+    }
+    if (frame->DepthMap.Empty()){
+        ROS_WARN("Empty depth map!");
+    }
+    if (frame->Texture.Empty()){
+        ROS_WARN("Empty texture!");
+    }
+    if (frame->ConfidenceMap.Empty()){
+        ROS_WARN("Empty confidence map!");
+    }
+    if (frame->NormalMap.Empty()){
+        ROS_WARN("Empty normal map!");
+    }
+    sensor_msgs::Image texture, confidence_map, normal_map, depth_map;
+    ros::Time timeNow = ros::Time::now();
+
+    std_msgs::Header header;
+    header.stamp = timeNow;
+    header.frame_id = frameId;
+    header.seq = frame->Info.FrameIndex;
+
+    texture.header = header;
+    confidence_map.header = header;
+    normal_map.header = header;
+    depth_map.header = header;
+}
+
 bool RosInterface::setCoordianteSpace(phoxi_camera::SetCoordinatesSpace::Request &req, phoxi_camera::SetCoordinatesSpace::Response &res){
     try {
         PhoXiInterface::setCoordinateSpace(req.coordinates_space);
@@ -506,7 +540,11 @@ pho::api::PFrame RosInterface::getPFrame(int id){
 }
 
 void RosInterface::getExternalCameraFrame(std::string topic_name){
-    //sensor_msgs::Image msg = ros::topic::waitForMessage<sensor_msgs::Image>(topic_name);
+    sensor_msgs::ImageConstPtr msg = ros::topic::waitForMessage<sensor_msgs::Image>(topic_name, ros::Duration(0.0, 2.0));
+    cv_bridge::CvImageConstPtr cv_ptr;
+    cv_ptr = cv_bridge::toCvCopy(msg, "bgr8");
+
+    ex_img = cv_ptr->image.clone();
 }
 
 int RosInterface::triggerImage(){
