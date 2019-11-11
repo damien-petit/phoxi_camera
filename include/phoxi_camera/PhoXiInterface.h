@@ -10,6 +10,8 @@
 #include <pcl_ros/point_cloud.h>
 #include <Eigen/Core>
 #include <phoxi_camera/PhoXiException.h>
+//#include "PhoXiOpenCVSupport.h"
+#include "PhoXiAdditionalCamera.h"
 
 //* PhoXiInterface
 /**

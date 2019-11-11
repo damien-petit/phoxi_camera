@@ -40,6 +40,19 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 
+enum class DepthMapSettingsResult {
+    Correct,
+    Incorrect,
+    FileMissing
+};
+
+struct DepthMapSettings {
+    pho::api::AdditionalCameraCalibration Calibration;
+    pho::api::DepthMap32f DepthMap;
+    int flag = 0;
+    // int FromFileCameraCount = 0;
+    // int FromDeviceCount = 0;
+};
 
 class RosInterface : protected  PhoXiInterface {
 public:
@@ -48,6 +61,7 @@ protected:
     void publishFrame(pho::api::PFrame frame);
     void publishCalibratedFrame(pho::api::PFrame frame);
     pho::api::PFrame getPFrame(int id = -1);
+    DepthMapSettingsResult getDepthMapSetting(std::string calibrationFilePath);
     void getExternalCameraFrame(std::string topic_name);
     int triggerImage();
     void connectCamera(std::string HWIdentification, pho::api::PhoXiTriggerMode mode = pho::api::PhoXiTriggerMode::Software, bool startAcquisition = true);
@@ -55,6 +69,9 @@ protected:
 
     std::string frameId;
     cv::Mat ex_img;
+
+    DepthMapSettings DepthMapSetting;
+
 private:
     bool getDeviceList(phoxi_camera::GetDeviceList::Request &req, phoxi_camera::GetDeviceList::Response &res);
     bool connectCamera(phoxi_camera::ConnectCamera::Request &req, phoxi_camera::ConnectCamera::Response &res);
