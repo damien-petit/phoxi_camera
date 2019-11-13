@@ -8,6 +8,7 @@
 #define OKRESPONSE "Ok"
 //ros
 #include <ros/ros.h>
+#include <ros/package.h>
 #include <ros/callback_queue.h>
 
 //dynamic reconfigure

@@ -187,7 +187,8 @@ bool RosInterface::getCalibratedFrame(phoxi_camera::GetCalibratedFrame::Request 
     try {
         if (DepthMapSetting.flag == 0)
         {
-            const auto calibrationResult = getDepthMapSetting("/home/kawashi/catkin_ws/src/phoxi_camera/config/calibration.txt");
+            std::string proj_path = ros::package::getPath("phoxi_camera");
+            const auto calibrationResult = getDepthMapSetting(proj_path + "/config/calibration.txt");
             switch (calibrationResult){
                 case DepthMapSettingsResult::Correct:
                     DepthMapSetting.flag = 1;
