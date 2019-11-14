@@ -8,6 +8,7 @@
 #define OKRESPONSE "Ok"
 //ros
 #include <ros/ros.h>
+#include <ros/package.h>
 #include <ros/callback_queue.h>
 
 //dynamic reconfigure
@@ -28,6 +29,7 @@
 #include <std_srvs/Empty.h>
 #include <phoxi_camera/Empty.h>
 #include <phoxi_camera/TriggerImage.h>
+#include <phoxi_camera/GetCalibratedFrame.h>
 #include <phoxi_camera/GetFrame.h>
 #include <phoxi_camera/SaveFrame.h>
 #include <phoxi_camera/GetHardwareIdentification.h>
@@ -35,18 +37,42 @@
 #include <phoxi_camera/SetCoordinatesSpace.h>
 #include <phoxi_camera/SetTransformationMatrix.h>
 
+//opencv
+#include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+
+enum class DepthMapSettingsResult {
+    Correct,
+    Incorrect,
+    FileMissing
+};
+
+struct DepthMapSettings {
+    pho::api::AdditionalCameraCalibration Calibration;
+    pho::api::DepthMap32f DepthMap;
+    int flag = 0;
+    // int FromFileCameraCount = 0;
+    // int FromDeviceCount = 0;
+};
 
 class RosInterface : protected  PhoXiInterface {
 public:
     RosInterface();
 protected:
     void publishFrame(pho::api::PFrame frame);
+    void publishCalibratedFrame(pho::api::PFrame frame);
     pho::api::PFrame getPFrame(int id = -1);
+    DepthMapSettingsResult getDepthMapSetting(std::string calibrationFilePath);
+    void getExternalCameraFrame(std::string topic_name);
     int triggerImage();
     void connectCamera(std::string HWIdentification, pho::api::PhoXiTriggerMode mode = pho::api::PhoXiTriggerMode::Software, bool startAcquisition = true);
     std::string getTriggerMode(pho::api::PhoXiTriggerMode mode);
 
     std::string frameId;
+    cv::Mat ex_img;
+
+    DepthMapSettings DepthMapSetting;
+
 private:
     bool getDeviceList(phoxi_camera::GetDeviceList::Request &req, phoxi_camera::GetDeviceList::Response &res);
     bool connectCamera(phoxi_camera::ConnectCamera::Request &req, phoxi_camera::ConnectCamera::Response &res);
@@ -60,6 +86,7 @@ private:
     bool stopAcquisition(phoxi_camera::Empty::Request &req, phoxi_camera::Empty::Response &res);
     bool triggerImage(phoxi_camera::TriggerImage::Request &req, phoxi_camera::TriggerImage::Response &res);
     bool getFrame(phoxi_camera::GetFrame::Request &req, phoxi_camera::GetFrame::Response &res);
+    bool getCalibratedFrame(phoxi_camera::GetCalibratedFrame::Request &req, phoxi_camera::GetCalibratedFrame::Response &res);
     bool saveFrame(phoxi_camera::SaveFrame::Request &req, phoxi_camera::SaveFrame::Response &res);
     bool disconnectCamera(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
     bool getHardwareIdentification(phoxi_camera::GetHardwareIdentification::Request &req, phoxi_camera::GetHardwareIdentification::Response &res);
@@ -87,6 +114,7 @@ private:
     ros::ServiceServer stopAcquisitionServiceV2;
     ros::ServiceServer triggerImageService;
     ros::ServiceServer getFrameService;
+    ros::ServiceServer getCalibratedFrameService;
     ros::ServiceServer saveFrameService;
     ros::ServiceServer disconnectCameraService;
     ros::ServiceServer getHardwareIdentificationService;
