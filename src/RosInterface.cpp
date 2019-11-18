@@ -410,9 +410,8 @@ void RosInterface::publishCalibratedFrame(pho::api::PFrame frame) {
     else {
         std::cout << "Computation of aligned depth map was NOT successful!" << std::endl;
     }
-
     
-    sensor_msgs::Image depth_map;
+    sensor_msgs::Image texture, confidence_map, normal_map, depth_map;
     ros::Time timeNow = ros::Time::now();
 
     std_msgs::Header header;
@@ -420,7 +419,39 @@ void RosInterface::publishCalibratedFrame(pho::api::PFrame frame) {
     header.frame_id = frameId;
     header.seq = frame->Info.FrameIndex;
 
-    depth_map.header = header;    
+    texture.header = header;
+    confidence_map.header = header;
+    normal_map.header = header;
+    depth_map.header = header;
+
+    cv::Mat cvGreyTexture(frame->Texture.Size.Height, frame->Texture.Size.Width, CV_32FC1, frame->Texture.operator[](0));
+    cv::normalize(cvGreyTexture, cvGreyTexture, 0, 255, CV_MINMAX);
+    cvGreyTexture.convertTo(cvGreyTexture,CV_8U);
+    cv::equalizeHist(cvGreyTexture, cvGreyTexture);
+    // cv::Mat cvRgbTexture;
+    // cv::cvtColor(cvGreyTexture,cvRgbTexture,CV_GRAY2RGB);
+    // cv_bridge::CvImage rgbTexture(header,sensor_msgs::image_encodings::BGR8,cvRgbTexture);
+
+    texture.encoding = sensor_msgs::image_encodings::TYPE_32FC1;
+    sensor_msgs::fillImage(texture, sensor_msgs::image_encodings::TYPE_32FC1,
+                           frame->Texture.Size.Height, // height
+                           frame->Texture.Size.Width, // width
+                           frame->Texture.Size.Width * sizeof(float), // stepSize
+                           frame->Texture.operator[](0));
+    confidence_map.encoding = sensor_msgs::image_encodings::TYPE_32FC1;
+    sensor_msgs::fillImage(confidence_map,
+                           sensor_msgs::image_encodings::TYPE_32FC1,
+                           frame->ConfidenceMap.Size.Height, // height
+                           frame->ConfidenceMap.Size.Width, // width
+                           frame->ConfidenceMap.Size.Width * sizeof(float), // stepSize
+                           frame->ConfidenceMap.operator[](0));
+    normal_map.encoding = sensor_msgs::image_encodings::TYPE_32FC3;
+    sensor_msgs::fillImage(normal_map,
+                           sensor_msgs::image_encodings::TYPE_32FC3,
+                           frame->NormalMap.Size.Height, // height
+                           frame->NormalMap.Size.Width, // width
+                           frame->NormalMap.Size.Width * sizeof(float) * 3, // stepSize
+                           frame->NormalMap.operator[](0));
     depth_map.encoding = sensor_msgs::image_encodings::TYPE_32FC1;
     sensor_msgs::fillImage(depth_map,
                            sensor_msgs::image_encodings::TYPE_32FC1,
@@ -428,9 +459,19 @@ void RosInterface::publishCalibratedFrame(pho::api::PFrame frame) {
                            DepthMapSetting.DepthMap.Size.Width, // width
                            DepthMapSetting.DepthMap.Size.Width * sizeof(float), // stepSize
                            DepthMapSetting.DepthMap.operator[](0));
+    std::shared_ptr<pcl::PointCloud<pcl::PointNormal>> cloud = PhoXiInterface::getPointCloudFromFrame(frame);
+    sensor_msgs::PointCloud2 output_cloud;
+    pcl::toROSMsg(*cloud,output_cloud);
+    output_cloud.header.frame_id = frameId;
+    output_cloud.header.stamp = timeNow;
+    output_cloud.header.seq = frame->Info.FrameIndex;
     
     cv_bridge::CvImage rgbTexture(header, sensor_msgs::image_encodings::BGR8, ex_img);
 
+    cloudPub.publish(output_cloud);
+    normalMapPub.publish(normal_map);
+    confidenceMapPub.publish(confidence_map);
+    rawTexturePub.publish(texture);
     rgbTexturePub.publish(rgbTexture.toImageMsg());
     depthMapPub.publish(depth_map);
 }
