@@ -36,7 +36,7 @@ catkin_make
 ~/resolution          - Default value 1         # 0 = Low, 1 = High
 ~/scan_multiplier     - Default value 1
 ~/send_confidence_map - Default value true
-~/send_deapth_map     - Default value true
+~/send_depth_map     - Default value true
 ~/send_normal_map     - Default value true
 ~/send_point_cloud    - Default value true
 ~/send_texture        - Default valuetrue

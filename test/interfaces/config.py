@@ -48,7 +48,7 @@ class param:
     scan_multiplier     = node_name + "/scan_multiplier"
     scanner_id          = node_name + "/scanner_id"
     send_confidence_map = node_name + "/send_confidence_map"
-    send_deapth_map     = node_name + "/send_deapth_map"
+    send_depth_map      = node_name + "/send_depth_map"
     send_normal_map     = node_name + "/send_normal_map"
     send_point_cloud    = node_name + "/send_point_cloud"
     send_texture        = node_name + "/send_texture"

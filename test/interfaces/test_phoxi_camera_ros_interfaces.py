@@ -328,8 +328,8 @@ class Test_phoxi_camera_ros_interface(TestCase):
         assert rospy.has_param(param.send_confidence_map) == True, \
             "Parameter %s is not exist" % param.send_confidence_map
 
-        assert rospy.has_param(param.send_deapth_map) == True, \
-            "Parameter %s is not exist" % param.send_deapth_map
+        assert rospy.has_param(param.send_depth_map) == True, \
+            "Parameter %s is not exist" % param.send_depth_map
 
         assert rospy.has_param(param.send_normal_map) == True, \
             "Parameter %s is not exist" % param.send_normal_map

@@ -614,7 +614,7 @@ void RosInterface::dynamicReconfigureCallback(phoxi_camera::phoxi_cameraConfig &
     if (level & (1 << 11)) {
         try{
             this->isOk();
-            scanner->OutputSettings->SendTexture = config.send_deapth_map;
+            scanner->OutputSettings->SendTexture = config.send_depth_map;
         }catch (PhoXiInterfaceException &e){
             ROS_WARN("%s",e.what());
         }
@@ -737,7 +737,7 @@ void RosInterface::initFromPhoXi(){
     this->dynamicReconfigureConfig.send_point_cloud = scanner->OutputSettings->SendPointCloud;
     this->dynamicReconfigureConfig.send_normal_map = scanner->OutputSettings->SendNormalMap;
     this->dynamicReconfigureConfig.send_confidence_map = scanner->OutputSettings->SendConfidenceMap;
-    this->dynamicReconfigureConfig.send_deapth_map = scanner->OutputSettings->SendDepthMap;
+    this->dynamicReconfigureConfig.send_depth_map = scanner->OutputSettings->SendDepthMap;
     this->dynamicReconfigureConfig.send_texture = scanner->OutputSettings->SendTexture;
 }
 
