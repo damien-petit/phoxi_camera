@@ -27,7 +27,7 @@ RosInterface::RosInterface() : nh("~"), dynamicReconfigureServer(dynamicReconfig
     stopAcquisitionServiceV2 = nh.advertiseService("V2/stop_acquisition", (bool (RosInterface::*)(phoxi_camera::Empty::Request&, phoxi_camera::Empty::Response&))&RosInterface::startAcquisition, this);
     triggerImageService =nh.advertiseService("trigger_image", &RosInterface::triggerImage, this);
     getFrameService = nh.advertiseService("get_frame", &RosInterface::getFrame, this);
-    getCalibratedFrameService = nh.advertiseService("get_calibrated_frame", &RosInterface::getCalibratedFrame, this);
+    getAlignedDepthMapService = nh.advertiseService("get_aligned_depth_map", &RosInterface::getAlignedDepthMap, this);
     saveFrameService = nh.advertiseService("save_frame", &RosInterface::saveFrame, this);
     disconnectCameraService = nh.advertiseService("disconnect_camera", &RosInterface::disconnectCamera, this);
     getHardwareIdentificationService = nh.advertiseService("get_hardware_indentification", &RosInterface::getHardwareIdentification, this);
@@ -46,6 +46,8 @@ RosInterface::RosInterface() : nh("~"), dynamicReconfigureServer(dynamicReconfig
     rawTexturePub = nh.advertise < sensor_msgs::Image > ("texture", topic_queue_size,latch_tipics);
     rgbTexturePub = nh.advertise < sensor_msgs::Image > ("rgb_texture", topic_queue_size,latch_tipics);
     depthMapPub = nh.advertise < sensor_msgs::Image > ("depth_map", topic_queue_size,latch_tipics);
+    alignedDepthMapPub = nh.advertise < sensor_msgs::Image > ("aligned_depth_map", topic_queue_size,latch_tipics);
+    externalCameraTexturePub = nh.advertise < sensor_msgs::Image > ("external_camera_texture", topic_queue_size,latch_tipics);
 
     //set dynamic reconfigure callback
     dynamicReconfigureServer.setCallback(boost::bind(&RosInterface::dynamicReconfigureCallback,this, _1, _2));
@@ -60,6 +62,7 @@ RosInterface::RosInterface() : nh("~"), dynamicReconfigureServer(dynamicReconfig
     std::string scannerId;
     nh.param<std::string>("scanner_id", scannerId, "InstalledExamples-PhoXi-example");
     nh.param<std::string>("frame_id", frameId, "PhoXi3Dscanner_sensor");
+    nh.param<bool>("send_aligned_depth_map", send_aligned_depth_map, false);
 
     try {
         RosInterface::connectCamera(scannerId);
@@ -167,8 +170,19 @@ bool RosInterface::triggerImage(phoxi_camera::TriggerImage::Request &req, phoxi_
 }
 bool RosInterface::getFrame(phoxi_camera::GetFrame::Request &req, phoxi_camera::GetFrame::Response &res){
     try {
+        ros::WallTime start_time = ros::WallTime::now();
         pho::api::PFrame frame = getPFrame(req.in);
+        ros::WallTime end_time = ros::WallTime::now();
+        double execution_time = (end_time - start_time).toNSec() * 1e-6;
+        ROS_INFO_STREAM("Frame Getting Time (ms): " << execution_time);
+
+        start_time = ros::WallTime::now();
+        if (send_aligned_depth_map) publishAlignedDepthMap(frame);
         publishFrame(frame);
+        end_time = ros::WallTime::now();
+        execution_time = (end_time - start_time).toNSec() * 1e-6;
+        ROS_INFO_STREAM("Data Cleaning Time for Publish (ms): " << execution_time);
+
         if(!frame){
             res.success = false;
             res.message = "Null frame!";
@@ -183,39 +197,10 @@ bool RosInterface::getFrame(phoxi_camera::GetFrame::Request &req, phoxi_camera::
     }
     return true;
 }
-bool RosInterface::getCalibratedFrame(phoxi_camera::GetCalibratedFrame::Request &req, phoxi_camera::GetCalibratedFrame::Response &res){
+bool RosInterface::getAlignedDepthMap(phoxi_camera::GetAlignedDepthMap::Request &req, phoxi_camera::GetAlignedDepthMap::Response &res){
     try {
-        if (DepthMapSetting.flag == 0)
-        {
-            std::string proj_path = ros::package::getPath("phoxi_camera");
-            const auto calibrationResult = getDepthMapSetting(proj_path + "/config/calibration.txt");
-            switch (calibrationResult){
-                case DepthMapSettingsResult::Correct:
-                    DepthMapSetting.flag = 1;
-                    std::cout << "Success to Load Calibration file" << std::endl;
-                    break;
-                case DepthMapSettingsResult::Incorrect:
-                    std::cout << "Error" << std::endl;
-                    break;
-                case DepthMapSettingsResult::FileMissing:
-                    std::cout << "Missing File" << std::endl;
-                    break;
-                default:
-                    std::cout << "Error" << std::endl;
-            }
-        }        
-
-        // Get RGB image from external camera
-        std::cout << "External Camera Topic name : " << req.topic_name << std::endl;
-        getExternalCameraFrame(req.topic_name);
-        std::cout << "Success to Get Image Data" << std::endl;
-
-        // Get PhoXi Frame
         pho::api::PFrame frame = getPFrame(req.in);
-
-        // Generate Depthmap using RGB image and Phoxi frame and publish the data
-        publishCalibratedFrame(frame);
-        std::cout << "Success to Publish Data" << std::endl;
+        publishAlignedDepthMap(frame);
         if(!frame){
             res.success = false;
             res.message = "Null frame!";
@@ -380,100 +365,40 @@ void RosInterface::publishFrame(pho::api::PFrame frame) {
     depthMapPub.publish(depth_map);
 }
 
-void RosInterface::publishCalibratedFrame(pho::api::PFrame frame) {
+void RosInterface::publishAlignedDepthMap(pho::api::PFrame frame) {
     if (!frame) {
         ROS_WARN("NUll frame!");
         return;
     }
-    if (frame->PointCloud.Empty()){
-        ROS_WARN("Empty point cloud!");
-    }
     if (frame->DepthMap.Empty()){
         ROS_WARN("Empty depth map!");
     }
-    if (frame->Texture.Empty()){
-        ROS_WARN("Empty texture!");
-    }
-    if (frame->ConfidenceMap.Empty()){
-        ROS_WARN("Empty confidence map!");
-    }
-    if (frame->NormalMap.Empty()){
-        ROS_WARN("Empty normal map!");
-    }
+
+    if (DepthMapSetting.flag == 0) getDepthMapSetting();
+    getExternalCameraFrame();
 
     pho::api::AdditionalCamera::Aligner Aligner(scanner, DepthMapSetting.Calibration);
-    if (Aligner.GetAlignedDepthMap(DepthMapSetting.DepthMap)) {
-        // cv::Mat ResultDepthMap;
-        // pho::api::ConvertMat2DToOpenCVMat(DepthMapSetting.DepthMap, ResultDepthMap);
-        std::cout << "Aligned depth map was computed successfully!" << std::endl;
-    }
-    else {
+    if (!(Aligner.GetAlignedDepthMap(DepthMapSetting.DepthMap)))
+    {
         std::cout << "Computation of aligned depth map was NOT successful!" << std::endl;
     }
-    
-    sensor_msgs::Image texture, confidence_map, normal_map, depth_map;
-    ros::Time timeNow = ros::Time::now();
 
-    std_msgs::Header header;
-    header.stamp = timeNow;
-    header.frame_id = frameId;
-    header.seq = frame->Info.FrameIndex;
+    sensor_msgs::Image aligned_depth_map;
+    aligned_depth_map.header.frame_id = external_camera_header.frame_id;
+    aligned_depth_map.header.stamp = ros::Time::now();
+    aligned_depth_map.header.seq = frame->Info.FrameIndex;
+    aligned_depth_map.encoding = sensor_msgs::image_encodings::TYPE_32FC1;
+    sensor_msgs::fillImage(aligned_depth_map,
+                        sensor_msgs::image_encodings::TYPE_32FC1,
+                        DepthMapSetting.DepthMap.Size.Height, // height
+                        DepthMapSetting.DepthMap.Size.Width, // width
+                        DepthMapSetting.DepthMap.Size.Width * sizeof(float), // stepSize
+                        DepthMapSetting.DepthMap.operator[](0));
 
-    texture.header = header;
-    confidence_map.header = header;
-    normal_map.header = header;
-    depth_map.header = header;
+    cv_bridge::CvImage external_camera_texture(external_camera_header, sensor_msgs::image_encodings::BGR8, ex_img);
 
-    cv::Mat cvGreyTexture(frame->Texture.Size.Height, frame->Texture.Size.Width, CV_32FC1, frame->Texture.operator[](0));
-    cv::normalize(cvGreyTexture, cvGreyTexture, 0, 255, CV_MINMAX);
-    cvGreyTexture.convertTo(cvGreyTexture,CV_8U);
-    cv::equalizeHist(cvGreyTexture, cvGreyTexture);
-    // cv::Mat cvRgbTexture;
-    // cv::cvtColor(cvGreyTexture,cvRgbTexture,CV_GRAY2RGB);
-    // cv_bridge::CvImage rgbTexture(header,sensor_msgs::image_encodings::BGR8,cvRgbTexture);
-
-    texture.encoding = sensor_msgs::image_encodings::TYPE_32FC1;
-    sensor_msgs::fillImage(texture, sensor_msgs::image_encodings::TYPE_32FC1,
-                           frame->Texture.Size.Height, // height
-                           frame->Texture.Size.Width, // width
-                           frame->Texture.Size.Width * sizeof(float), // stepSize
-                           frame->Texture.operator[](0));
-    confidence_map.encoding = sensor_msgs::image_encodings::TYPE_32FC1;
-    sensor_msgs::fillImage(confidence_map,
-                           sensor_msgs::image_encodings::TYPE_32FC1,
-                           frame->ConfidenceMap.Size.Height, // height
-                           frame->ConfidenceMap.Size.Width, // width
-                           frame->ConfidenceMap.Size.Width * sizeof(float), // stepSize
-                           frame->ConfidenceMap.operator[](0));
-    normal_map.encoding = sensor_msgs::image_encodings::TYPE_32FC3;
-    sensor_msgs::fillImage(normal_map,
-                           sensor_msgs::image_encodings::TYPE_32FC3,
-                           frame->NormalMap.Size.Height, // height
-                           frame->NormalMap.Size.Width, // width
-                           frame->NormalMap.Size.Width * sizeof(float) * 3, // stepSize
-                           frame->NormalMap.operator[](0));
-    depth_map.encoding = sensor_msgs::image_encodings::TYPE_32FC1;
-    sensor_msgs::fillImage(depth_map,
-                           sensor_msgs::image_encodings::TYPE_32FC1,
-                           DepthMapSetting.DepthMap.Size.Height, // height
-                           DepthMapSetting.DepthMap.Size.Width, // width
-                           DepthMapSetting.DepthMap.Size.Width * sizeof(float), // stepSize
-                           DepthMapSetting.DepthMap.operator[](0));
-    std::shared_ptr<pcl::PointCloud<pcl::PointNormal>> cloud = PhoXiInterface::getPointCloudFromFrame(frame);
-    sensor_msgs::PointCloud2 output_cloud;
-    pcl::toROSMsg(*cloud,output_cloud);
-    output_cloud.header.frame_id = frameId;
-    output_cloud.header.stamp = timeNow;
-    output_cloud.header.seq = frame->Info.FrameIndex;
-    
-    cv_bridge::CvImage rgbTexture(header, sensor_msgs::image_encodings::BGR8, ex_img);
-
-    cloudPub.publish(output_cloud);
-    normalMapPub.publish(normal_map);
-    confidenceMapPub.publish(confidence_map);
-    rawTexturePub.publish(texture);
-    rgbTexturePub.publish(rgbTexture.toImageMsg());
-    depthMapPub.publish(depth_map);
+    alignedDepthMapPub.publish(aligned_depth_map);
+    externalCameraTexturePub.publish(external_camera_texture);
 }
 
 bool RosInterface::setCoordianteSpace(phoxi_camera::SetCoordinatesSpace::Request &req, phoxi_camera::SetCoordinatesSpace::Response &res){
@@ -629,28 +554,39 @@ pho::api::PFrame RosInterface::getPFrame(int id){
     return frame;
 }
 
-DepthMapSettingsResult RosInterface::getDepthMapSetting(std::string calibrationFilePath){
-    std::cout << "Calibration File Path: " << calibrationFilePath << std::endl;
+void RosInterface::getDepthMapSetting(){
+    std::string proj_path = ros::package::getPath("phoxi_camera");
+    std::string calibrationFile = "";
+    nh.getParam("calibration_file", calibrationFile);
+    std::string file_path = proj_path + "/config/" + calibrationFile;
 
-    std::ifstream stream(calibrationFilePath.c_str());
+    std::ifstream stream(file_path.c_str());
     if (!stream.good()) {
-        return DepthMapSettingsResult::FileMissing;    
+        std::cout << "Missing File" << std::endl;
+        // return DepthMapSettingsResult::FileMissing;    
     }
-    
-    auto CorrectCalibration = true;
-    DepthMapSetting.Calibration.LoadFromFile(calibrationFilePath);
+
+    bool CorrectCalibration = true;
+    DepthMapSetting.Calibration.LoadFromFile(file_path);
     CorrectCalibration &= DepthMapSetting.Calibration.CalibrationSettings.DistortionCoefficients.size() > 4;
     CorrectCalibration &= DepthMapSetting.Calibration.CameraResolution.Width != 0 && DepthMapSetting.Calibration.CameraResolution.Height != 0;
-    return CorrectCalibration
-        ? DepthMapSettingsResult::Correct
-        : DepthMapSettingsResult::Incorrect;
+
+    if (CorrectCalibration)
+    {
+        DepthMapSetting.flag = 1;
+        std::cout << "Success to Load Calibration file" << std::endl;
+    }
+    else std::cout << "Error for Depth Map Setting" << std::endl;
 }
 
-void RosInterface::getExternalCameraFrame(std::string topic_name){
-    sensor_msgs::ImageConstPtr msg = ros::topic::waitForMessage<sensor_msgs::Image>(topic_name);
+void RosInterface::getExternalCameraFrame(){
+    std::string externalCameraTopicName = "";
+    nh.getParam("external_camera_topic_name", externalCameraTopicName);
+    sensor_msgs::ImageConstPtr msg = ros::topic::waitForMessage<sensor_msgs::Image>(externalCameraTopicName);
     cv_bridge::CvImagePtr cv_ptr;
     cv_ptr = cv_bridge::toCvCopy(msg, "bgr8");
 
+    external_camera_header = msg->header;
     ex_img = cv_ptr->image.clone();
 }
 

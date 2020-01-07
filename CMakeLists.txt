@@ -45,7 +45,7 @@ add_service_files(
     TriggerImage.srv
     GetDeviceList.srv
     GetBool.srv
-    GetCalibratedFrame.srv
+    GetAlignedDepthMap.srv
     GetFrame.srv
     GetHardwareIdentification.srv
     GetSupportedCapturingModes.srv

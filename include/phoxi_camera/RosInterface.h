@@ -29,7 +29,7 @@
 #include <std_srvs/Empty.h>
 #include <phoxi_camera/Empty.h>
 #include <phoxi_camera/TriggerImage.h>
-#include <phoxi_camera/GetCalibratedFrame.h>
+#include <phoxi_camera/GetAlignedDepthMap.h>
 #include <phoxi_camera/GetFrame.h>
 #include <phoxi_camera/SaveFrame.h>
 #include <phoxi_camera/GetHardwareIdentification.h>
@@ -60,15 +60,17 @@ public:
     RosInterface();
 protected:
     void publishFrame(pho::api::PFrame frame);
-    void publishCalibratedFrame(pho::api::PFrame frame);
+    void publishAlignedDepthMap(pho::api::PFrame frame);
     pho::api::PFrame getPFrame(int id = -1);
-    DepthMapSettingsResult getDepthMapSetting(std::string calibrationFilePath);
-    void getExternalCameraFrame(std::string topic_name);
+    void getDepthMapSetting();
+    void getExternalCameraFrame();
     int triggerImage();
     void connectCamera(std::string HWIdentification, pho::api::PhoXiTriggerMode mode = pho::api::PhoXiTriggerMode::Software, bool startAcquisition = true);
     std::string getTriggerMode(pho::api::PhoXiTriggerMode mode);
 
     std::string frameId;
+    bool send_aligned_depth_map;
+    std_msgs::Header external_camera_header;
     cv::Mat ex_img;
 
     DepthMapSettings DepthMapSetting;
@@ -86,7 +88,7 @@ private:
     bool stopAcquisition(phoxi_camera::Empty::Request &req, phoxi_camera::Empty::Response &res);
     bool triggerImage(phoxi_camera::TriggerImage::Request &req, phoxi_camera::TriggerImage::Response &res);
     bool getFrame(phoxi_camera::GetFrame::Request &req, phoxi_camera::GetFrame::Response &res);
-    bool getCalibratedFrame(phoxi_camera::GetCalibratedFrame::Request &req, phoxi_camera::GetCalibratedFrame::Response &res);
+    bool getAlignedDepthMap(phoxi_camera::GetAlignedDepthMap::Request &req, phoxi_camera::GetAlignedDepthMap::Response &res);
     bool saveFrame(phoxi_camera::SaveFrame::Request &req, phoxi_camera::SaveFrame::Response &res);
     bool disconnectCamera(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
     bool getHardwareIdentification(phoxi_camera::GetHardwareIdentification::Request &req, phoxi_camera::GetHardwareIdentification::Response &res);
@@ -114,7 +116,7 @@ private:
     ros::ServiceServer stopAcquisitionServiceV2;
     ros::ServiceServer triggerImageService;
     ros::ServiceServer getFrameService;
-    ros::ServiceServer getCalibratedFrameService;
+    ros::ServiceServer getAlignedDepthMapService;
     ros::ServiceServer saveFrameService;
     ros::ServiceServer disconnectCameraService;
     ros::ServiceServer getHardwareIdentificationService;
@@ -129,6 +131,8 @@ private:
     ros::Publisher rawTexturePub;
     ros::Publisher rgbTexturePub;
     ros::Publisher depthMapPub;
+    ros::Publisher alignedDepthMapPub;
+    ros::Publisher externalCameraTexturePub;
 
     //dynamic reconfigure
     boost::recursive_mutex dynamicReconfigureMutex;
