@@ -18,5 +18,7 @@ shutter_multiplier: 1
 timeout: -3          # in ms, special parameters: 0 = Zero, -1 = Infinity, -2 = Last stored, -3 = Default
 trigger_mode: 1      # 0 = Free run, 1 = Software
 send_aligned_depth_map: true # if true, acquired data and aligned depth map to external camera will be sent
-calibration_file: "realsense_calibration.txt"
-external_camera_topic_name: "/camera/color/image_raw"
+# calibration_file: "realsense_calibration.txt"
+# external_camera_topic_name: "/camera/color/image_raw"
+calibration_file: "basler_calibration.txt"
+external_camera_topic_name: "/pylon_camera_node/image_raw"
