@@ -48,6 +48,10 @@ RosInterface::RosInterface() : nh("~"), dynamicReconfigureServer(dynamicReconfig
     depthMapPub = nh.advertise < sensor_msgs::Image > ("depth_map", topic_queue_size,latch_tipics);
     alignedDepthMapPub = nh.advertise < sensor_msgs::Image > ("aligned_depth_map", topic_queue_size,latch_tipics);
     externalCameraTexturePub = nh.advertise < sensor_msgs::Image > ("external_camera_texture", topic_queue_size,latch_tipics);
+    triggerIdPub = nh.advertise < std_msgs::Int32 > ("trigger_id", topic_queue_size, latch_tipics);
+
+    //create subscribers
+    triggerScanSub = nh.subscribe("/pick_practice/trigger", 10, &RosInterface::triggerScanCallBack, this);
 
     //set dynamic reconfigure callback
     dynamicReconfigureServer.setCallback(boost::bind(&RosInterface::dynamicReconfigureCallback,this, _1, _2));
@@ -170,18 +174,21 @@ bool RosInterface::triggerImage(phoxi_camera::TriggerImage::Request &req, phoxi_
 }
 bool RosInterface::getFrame(phoxi_camera::GetFrame::Request &req, phoxi_camera::GetFrame::Response &res){
     try {
-        ros::WallTime start_time = ros::WallTime::now();
+        ros::WallTime start_scan_time = ros::WallTime::now();
         pho::api::PFrame frame = getPFrame(req.in);
-        ros::WallTime end_time = ros::WallTime::now();
-        double execution_time = (end_time - start_time).toNSec() * 1e-6;
-        ROS_INFO_STREAM("Frame Getting Time (ms): " << execution_time);
+        ros::WallTime end_scan_time = ros::WallTime::now();
+        double scan_time = (end_scan_time - start_scan_time).toNSec() * 1e-9;
+        ROS_INFO_STREAM("Frame Getting Time(s): " << scan_time);
 
-        start_time = ros::WallTime::now();
+	ros::WallTime start_build_msg_time = ros::WallTime::now();
         if (send_aligned_depth_map) publishAlignedDepthMap(frame);
         publishFrame(frame);
-        end_time = ros::WallTime::now();
-        execution_time = (end_time - start_time).toNSec() * 1e-6;
-        ROS_INFO_STREAM("Data Cleaning Time for Publish (ms): " << execution_time);
+	ros::WallTime end_build_msg_time = ros::WallTime::now();
+        double build_msg_time = (end_build_msg_time - start_build_msg_time).toNSec() * 1e-9;
+        ROS_INFO_STREAM("Building All Msg Time(s): " << build_msg_time);
+
+	double total_time = (end_build_msg_time - start_scan_time).toNSec() * 1e-9;
+	ROS_INFO_STREAM("Total Time(s): " << total_time);
 
         if(!frame){
             res.success = false;
@@ -281,6 +288,36 @@ bool RosInterface::getSupportedCapturingModes(phoxi_camera::GetSupportedCapturin
     return true;
 }
 
+void RosInterface::triggerScanCallBack(const std_msgs::Int32::ConstPtr& msg)
+{
+    ROS_INFO_STREAM("Subscribe Trigger! TriggerID: " << (int)msg->data);
+    try {
+        ros::WallTime start_scan_time = ros::WallTime::now();
+        pho::api::PFrame frame = getPFrame(-1);
+        ros::WallTime end_scan_time = ros::WallTime::now();
+        double scan_time = (end_scan_time - start_scan_time).toNSec() * 1e-9;
+        ROS_INFO_STREAM("Frame Getting Time(s): " << scan_time);
+
+        std_msgs::Int32 trigger_id;
+        trigger_id.data = msg->data;
+        triggerIdPub.publish(trigger_id);
+
+	ros::WallTime start_build_msg_time = ros::WallTime::now();
+        if (send_aligned_depth_map) publishAlignedDepthMap(frame);
+        publishFrame(frame);
+	ros::WallTime end_build_msg_time = ros::WallTime::now();
+        double build_msg_time = (end_build_msg_time - start_build_msg_time).toNSec() * 1e-9;
+        ROS_INFO_STREAM("Building All Msg Time(s): " << build_msg_time);
+
+	double total_time = (end_build_msg_time - start_scan_time).toNSec() * 1e-9;
+	ROS_INFO_STREAM("Total Time(s): " << total_time);
+
+    }catch (PhoXiInterfaceException &e){
+        std::cout << "Error Acquiring Data: " << e.what() << std::endl;
+    }
+    
+}
+
 void RosInterface::publishFrame(pho::api::PFrame frame) {
     if (!frame) {
         ROS_WARN("NUll frame!");
@@ -349,6 +386,8 @@ void RosInterface::publishFrame(pho::api::PFrame frame) {
                            frame->DepthMap.Size.Width, // width
                            frame->DepthMap.Size.Width * sizeof(float), // stepSize
                            frame->DepthMap.operator[](0));
+
+    ros::WallTime start_pointcloud_time = ros::WallTime::now();
     std::shared_ptr<pcl::PointCloud<pcl::PointNormal>> cloud = PhoXiInterface::getPointCloudFromFrame(frame);
 
     sensor_msgs::PointCloud2 output_cloud;
@@ -356,6 +395,10 @@ void RosInterface::publishFrame(pho::api::PFrame frame) {
     output_cloud.header.frame_id = frameId;
     output_cloud.header.stamp = timeNow;
     output_cloud.header.seq = frame->Info.FrameIndex;
+    
+    ros::WallTime end_pointcloud_time = ros::WallTime::now();
+    double pointcloud_time = (end_pointcloud_time - start_pointcloud_time).toNSec() * 1e-9;
+    ROS_INFO_STREAM("Building Point Cloud Msg Time(s): " << pointcloud_time);
 
     cloudPub.publish(output_cloud);
     normalMapPub.publish(normal_map);
@@ -370,6 +413,8 @@ void RosInterface::publishAlignedDepthMap(pho::api::PFrame frame) {
         ROS_WARN("NUll frame!");
         return;
     }
+
+    ros::WallTime start_aligning_time = ros::WallTime::now();
     if (frame->DepthMap.Empty()){
         ROS_WARN("Empty depth map!");
     }
@@ -399,6 +444,10 @@ void RosInterface::publishAlignedDepthMap(pho::api::PFrame frame) {
 
     alignedDepthMapPub.publish(aligned_depth_map);
     externalCameraTexturePub.publish(external_camera_texture);
+	
+    ros::WallTime end_aligning_time = ros::WallTime::now();
+    double aligning_time = (end_aligning_time - start_aligning_time).toNSec() * 1e-9;
+    ROS_INFO_STREAM("Building Aligned Depth Map Msg Time(s): " << aligning_time);
 }
 
 bool RosInterface::setCoordianteSpace(phoxi_camera::SetCoordinatesSpace::Request &req, phoxi_camera::SetCoordinatesSpace::Response &res){

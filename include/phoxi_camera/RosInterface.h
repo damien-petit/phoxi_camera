@@ -41,6 +41,8 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 
+#include "std_msgs/Int32.h"
+
 enum class DepthMapSettingsResult {
     Correct,
     Incorrect,
@@ -65,6 +67,7 @@ protected:
     void getDepthMapSetting();
     void getExternalCameraFrame();
     int triggerImage();
+    void triggerScanCallBack(const std_msgs::Int32::ConstPtr& msg);
     void connectCamera(std::string HWIdentification, pho::api::PhoXiTriggerMode mode = pho::api::PhoXiTriggerMode::Software, bool startAcquisition = true);
     std::string getTriggerMode(pho::api::PhoXiTriggerMode mode);
 
@@ -133,6 +136,10 @@ private:
     ros::Publisher depthMapPub;
     ros::Publisher alignedDepthMapPub;
     ros::Publisher externalCameraTexturePub;
+    ros::Publisher triggerIdPub;
+
+    //ros subscribers
+    ros::Subscriber triggerScanSub;
 
     //dynamic reconfigure
     boost::recursive_mutex dynamicReconfigureMutex;
