@@ -1,4 +1,5 @@
-scanner_id: "2019-06-049-LC3"
+#scanner_id: "2019-06-049-LC3"
+scanner_id: "2018-09-035-LC3"
 frame_id: "PhoXi3Dscanner_sensor"
 latch_tipics: true
 topic_queue_size: 1
