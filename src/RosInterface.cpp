@@ -180,15 +180,16 @@ bool RosInterface::getFrame(phoxi_camera::GetFrame::Request &req, phoxi_camera::
         double scan_time = (end_scan_time - start_scan_time).toNSec() * 1e-9;
         ROS_INFO_STREAM("Frame Getting Time(s): " << scan_time);
 
-	ros::WallTime start_build_msg_time = ros::WallTime::now();
+	//ros::WallTime start_build_msg_time = ros::WallTime::now();
         if (send_aligned_depth_map) publishAlignedDepthMap(frame);
         publishFrame(frame);
 	ros::WallTime end_build_msg_time = ros::WallTime::now();
-        double build_msg_time = (end_build_msg_time - start_build_msg_time).toNSec() * 1e-9;
-        ROS_INFO_STREAM("Building All Msg Time(s): " << build_msg_time);
+        //double build_msg_time = (end_build_msg_time - start_build_msg_time).toNSec() * 1e-9;
+        //ROS_INFO_STREAM("Building All Msg Time(s): " << build_msg_time);
 
 	double total_time = (end_build_msg_time - start_scan_time).toNSec() * 1e-9;
 	ROS_INFO_STREAM("Total Time(s): " << total_time);
+	std::cout << std::endl;
 
         if(!frame){
             res.success = false;
@@ -425,7 +426,7 @@ void RosInterface::publishAlignedDepthMap(pho::api::PFrame frame) {
     pho::api::AdditionalCamera::Aligner Aligner(scanner, DepthMapSetting.Calibration);
     if (!(Aligner.GetAlignedDepthMap(DepthMapSetting.DepthMap)))
     {
-        std::cout << "Computation of aligned depth map was NOT successful!" << std::endl;
+        ROS_ERROR("Computation of aligned depth map was NOT successful!");
     }
 
     sensor_msgs::Image aligned_depth_map;
@@ -623,9 +624,9 @@ void RosInterface::getDepthMapSetting(){
     if (CorrectCalibration)
     {
         DepthMapSetting.flag = 1;
-        std::cout << "Success to Load Calibration file" << std::endl;
+        ROS_INFO("Success to Load Calibration file");
     }
-    else std::cout << "Error for Depth Map Setting" << std::endl;
+    else ROS_ERROR("Error for Depth Map Setting");
 }
 
 void RosInterface::getExternalCameraFrame(){
@@ -725,10 +726,6 @@ void RosInterface::initFromPhoXi(){
     this->dynamicReconfigureConfig.send_depth_map = scanner->OutputSettings->SendDepthMap;
     this->dynamicReconfigureConfig.send_texture = scanner->OutputSettings->SendTexture;
 }
-
-
-
-
 
 
 
