@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 # camera ID for example "InstalledExamples-PhoXi-example" for file camera, "1711002" for real scanner
-camera_id = "2019-06-049-LC3"
+# camera_id = "2018-09-035-LC3"
+camera_id = "InstalledExamples-basic-example"
 
 node_name = "/phoxi_camera"
 
@@ -35,14 +36,15 @@ class service:
     # V2
     V2_is_acquiring         = node_name + "/V2/is_acquiring"
     V2_is_connected         = node_name + "/V2/is_connected"
-    V2_set_coordination_space = node_name + "/V2/set_coordination_space"
+    V2_set_coordinate_space = node_name + "/V2/set_coordinate_space"
     V2_set_transformation   = node_name + "/V2/set_transformation"
     V2_start_acquisition    = node_name + "/V2/start_acquisition"
     V2_stop_acquisition     = node_name + "/V2/stop_acquisition"
+    V2_save_last_frame      = node_name + "/V2/save_last_frame"
 
 class param:
     confidence          = node_name + "/confidence"
-    coordination_space  = node_name + "/coordination_space"
+    coordinate_space    = node_name + "/coordinate_space"
     frame_id            = node_name + "/frame_id"
     resolution          = node_name + "/resolution"
     scan_multiplier     = node_name + "/scan_multiplier"

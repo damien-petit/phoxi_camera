@@ -7,28 +7,41 @@ PKG = 'phoxi_camera'
 
 from unittest import TestCase
 from config import *
-import rospy
+import rospy, time
 import std_srvs.srv
 import sensor_msgs.msg
-from ros_utils import *
+import geometry_msgs.msg._Transform as transform
+# from ros_utils import *
 import phoxi_camera.srv as phoxi_camera_srv
 
 published_topics_num = 0
+
 
 def connect():
     rospy.wait_for_service(service.connect_camera)
     srv_connect = rospy.ServiceProxy(service.connect_camera, phoxi_camera_srv.ConnectCamera)
     srv_connect(camera_id)
+    time.sleep(1)
+
 
 def disconnect():
     rospy.wait_for_service(service.disconnect_camera)
     srv_disconnect = rospy.ServiceProxy(service.disconnect_camera, std_srvs.srv.Empty)
     srv_disconnect()
+    time.sleep(1)
+
 
 class Test_phoxi_camera_ros_interface(TestCase):
+    # @classmethod
+    # def setUpClass(cls):
+    #     time.sleep(5)
+
     def setUp(self):
         rospy.init_node('Test_ROS_interfaces')
         connect()
+
+    def tearDown(self):
+        disconnect()
 
     def test_getDeviceList(self):
         srv = rospy.ServiceProxy(service.get_device_list, phoxi_camera_srv.GetDeviceList)
@@ -120,25 +133,45 @@ class Test_phoxi_camera_ros_interface(TestCase):
 
     def test_startAcquisition(self):
         srv_startAcq = rospy.ServiceProxy(service.start_acquisition, std_srvs.srv.Empty)
-        srv_startAcq()  # TODO no throw
+        srv_startAcq()
+
+        # check acquisition setting
+        srv_acquiring = rospy.ServiceProxy(service.V2_is_acquiring, phoxi_camera_srv.GetBool)
+        res = srv_acquiring()
+        assert True == res.value
 
     def test_stopAcquisition(self):
         srv_stopAcq = rospy.ServiceProxy(service.stop_acquisition, std_srvs.srv.Empty)
-        srv_stopAcq()  # TODO no except
+        srv_stopAcq()
+
+        # check acquisition setting
+        srv_acquiring = rospy.ServiceProxy(service.V2_is_acquiring, phoxi_camera_srv.GetBool)
+        res = srv_acquiring()
+        assert False == res.value
 
     def test_startAcquisitionV2(self):
         srv_startAcq = rospy.ServiceProxy(service.V2_start_acquisition, phoxi_camera_srv.Empty)
-        res = srv_startAcq()  # TODO no throw
+        res = srv_startAcq()
 
         assert True == res.success
         assert "Ok" == res.message
+
+        # check acquisition setting
+        srv_acquiring = rospy.ServiceProxy(service.V2_is_acquiring, phoxi_camera_srv.GetBool)
+        res = srv_acquiring()
+        assert True == res.value
 
     def test_stopAcquisitionV2(self):
         srv_stopAcq = rospy.ServiceProxy(service.V2_stop_acquisition, phoxi_camera_srv.Empty)
-        res = srv_stopAcq()  # TODO no except
+        res = srv_stopAcq()
 
         assert True == res.success
         assert "Ok" == res.message
+
+        # check acquisition setting
+        srv_acquiring = rospy.ServiceProxy(service.V2_is_acquiring, phoxi_camera_srv.GetBool)
+        res = srv_acquiring()
+        assert False == res.value
 
     def test_triggerImage(self):
         srv_trig = rospy.ServiceProxy(service.trigger_image, phoxi_camera_srv.TriggerImage)
@@ -175,7 +208,6 @@ class Test_phoxi_camera_ros_interface(TestCase):
         assert True == res.success
         assert "Ok" == res.message
         assert published_topics_num == 4, "Some topic was not published after get_frame service"
-
         # disconnected
         disconnect()
         res = srv_getFrame(-1)
@@ -187,7 +219,7 @@ class Test_phoxi_camera_ros_interface(TestCase):
         import os
         path = os.getcwd()  # it should be ~/.ros
         filename = "/file.ply"
-        os.system("rm " + path + filename)  # remove old file
+        os.system("rm -f " + path + filename)  # remove old file
 
         dir = os.listdir(path)
 
@@ -199,7 +231,7 @@ class Test_phoxi_camera_ros_interface(TestCase):
         assert True == res.success
         assert "Ok" == res.message
 
-        os.system("rm " + path + filename)  # remove created file
+        os.system("rm -f " + path + filename)  # remove created file
 
     def test_getHardwareIdentification(self):
         # connected
@@ -238,9 +270,9 @@ class Test_phoxi_camera_ros_interface(TestCase):
         assert "Ok" != res.message
 
     def test_setCoordianteSpace(self):
-        srv_setSpace = rospy.ServiceProxy(service.V2_set_coordination_space, phoxi_camera_srv.SetCoordinatesSpace)
+        srv_setSpace = rospy.ServiceProxy(service.V2_set_coordinate_space, phoxi_camera_srv.SetCoordinatesSpace)
 
-        # 0 - 5 c++ enum, pho::api::PhoXiCoordinateSpace::...
+        # NoValue = 0, CameraSpace = 1, MarkerSpace = 3, RobotSpace = 4, CustomSpace = 5
         res = srv_setSpace(0)
         assert True == res.success
         assert "Ok" == res.message
@@ -268,86 +300,42 @@ class Test_phoxi_camera_ros_interface(TestCase):
     def test_setTransformation(self):
         srv_transform = rospy.ServiceProxy(service.V2_set_transformation, phoxi_camera_srv.SetTransformationMatrix)
 
-        res = srv_transform([], 5, True, False)
-        assert False == res.success
-        assert "Bad matrix dimensions!" == res.message
-
-        res = srv_transform([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], 5, True, False)
+        trans = transform.Transform()
+        res = srv_transform(trans, 4, True, False)
         assert True == res.success
         assert "Ok" == res.message
 
-    def test_topics_running(self):
-        """
-        test if there are all the necessary topics that have been published
-        """
+    def test_saveLastFrameV2(self):
+        import os
 
-        assert topic_is_running(topic.confidence_map) == True, \
-            "Topic %s, not exist" % (topic.confidence_map)
+#<<<<<<< HEAD
+#        assert rospy.has_param(param.send_depth_map) == True, \
+#            "Parameter %s is not exist" % param.send_depth_map
+#=======
+        # trigger image has to be perform before
+        srv_trig = rospy.ServiceProxy(service.trigger_image, phoxi_camera_srv.TriggerImage)
+        res = srv_trig()
+        time.sleep(5)       #TODO  SCAN-904
+#>>>>>>> devel_20200311
 
-        assert topic_is_running(topic.diagnostics) == True, \
-            "Topic %s, not exist" % (topic.diagnostics)
+        # save last frame service
+        srv_saveLastFrame = rospy.ServiceProxy(service.V2_save_last_frame, phoxi_camera_srv.SaveLastFrame)
 
-        assert topic_is_running(topic.normal_map) == True, \
-            "Topic %s, not exist" % (topic.normal_map)
+        path = os.getcwd() + '/'
+        filenames = ["file.ply", "file.praw", "file.ptx"]
+        os.system("rm -f " + path + "*.ply " + path + "*.praw " + path + "*.ptx")  # remove old file if exist
 
-        assert topic_is_running(topic.param_description) == True, \
-            "Topic %s, not exist" % (topic.param_description)
+        for file in filenames:
+            dir = os.listdir(path) # record files in directory
 
-        assert topic_is_running(topic.param_update) == True, \
-            "Topic %s, not exist" % (topic.param_update)
+            res = srv_saveLastFrame(path + file)
 
-        assert topic_is_running(topic.point_cloud) == True, \
-            "Topic %s, not exist" % (topic.point_cloud)
+            dir = set(os.listdir(path)) - set(dir)
+            assert dir.pop() == file
+            assert True == res.success
+            assert "Ok" == res.message
+            os.system("rm -f " + path + file)  # remove created file
 
-        assert topic_is_running(topic.texture) == True, \
-            "Topic %s, not exist" % (topic.texture)
-
-    def test_parameter_server_variables_exist(self):
-        """
-        test if variables exist in parameter server
-        """
-
-        assert rospy.has_param(param.confidence) == True, \
-            "Parameter %s is not exist" % param.confidence
-
-        assert rospy.has_param(param.coordination_space) == True, \
-            "Parameter %s is not exist" % param.coordination_space
-
-        assert rospy.has_param(param.frame_id) == True, \
-            "Parameter %s is not exist" % param.frame_id
-
-        assert rospy.has_param(param.resolution) == True, \
-            "Parameter %s is not exist" % param.resolution
-
-        assert rospy.has_param(param.scan_multiplier) == True, \
-            "Parameter %s is not exist" % param.scan_multiplier
-
-        assert rospy.has_param(param.scanner_id) == True, \
-            "Parameter %s is not exist" % param.scanner_id
-
-        assert rospy.has_param(param.send_confidence_map) == True, \
-            "Parameter %s is not exist" % param.send_confidence_map
-
-        assert rospy.has_param(param.send_depth_map) == True, \
-            "Parameter %s is not exist" % param.send_depth_map
-
-        assert rospy.has_param(param.send_normal_map) == True, \
-            "Parameter %s is not exist" % param.send_normal_map
-
-        assert rospy.has_param(param.send_point_cloud) == True, \
-            "Parameter %s is not exist" % param.send_point_cloud
-
-        assert rospy.has_param(param.send_texture) == True, \
-            "Parameter %s is not exist" % param.send_texture
-
-        assert rospy.has_param(param.shutter_multiplier) == True, \
-            "Parameter %s is not exist" % param.shutter_multiplier
-
-        assert rospy.has_param(param.timeout) == True, \
-            "Parameter %s is not exist" % param.timeout
-
-        assert rospy.has_param(param.trigger_mode) == True, \
-            "Parameter %s is not exist" % param.trigger_mode
 
 if __name__ == '__main__':
     import rostest

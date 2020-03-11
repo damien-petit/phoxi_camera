@@ -6,7 +6,8 @@
 #define PROJECT_COORDINATESSPACE_H
 
 #include <PhoXi.h>
-namespace phoxi_camera{
+
+namespace phoxi_camera {
     typedef pho::api::PhoXiCoordinateSpace CoordinateSpace;
     typedef pho::api::PhoXiTriggerMode TriggerMode;
 }

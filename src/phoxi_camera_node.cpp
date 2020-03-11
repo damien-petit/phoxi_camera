@@ -30,10 +30,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <phoxi_camera/RosInterface.h>
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     ros::init(argc, argv, "phoxi_camera");
 
-    RosInterface interface;
+    phoxi_camera::RosInterface interface;
 
     ros::spin();
     return 0;

@@ -7,7 +7,7 @@ PKG = 'phoxi_camera'
 
 from unittest import TestCase
 from config import *
-import rospy
+import rospy, time
 import phoxi_camera.srv as phoxi_camera_srv
 from ros_utils import *
 
@@ -17,6 +17,10 @@ def connect():
     srv_connect(camera_id)
 
 class Test_phoxi_camera_interfaces(TestCase):
+    # @classmethod
+    # def setUpClass(cls):
+    #     time.sleep(5)
+
     def setUp(self):
         rospy.init_node('Test_ROS_interfaces')
         connect()
@@ -126,8 +130,8 @@ class Test_phoxi_camera_interfaces(TestCase):
         assert service_is_running(service.V2_is_connected) == True, \
             "Service %s is not exist" % service.V2_is_connected
 
-        assert service_is_running(service.V2_set_coordination_space) == True, \
-            "Service %s is not exist" % service.V2_set_coordination_space
+        assert service_is_running(service.V2_set_coordinate_space) == True, \
+            "Service %s is not exist" % service.V2_set_coordinate_space
 
         assert service_is_running(service.V2_set_transformation) == True, \
             "Service %s is not exist" % service.V2_set_transformation
@@ -138,6 +142,9 @@ class Test_phoxi_camera_interfaces(TestCase):
         assert service_is_running(service.V2_stop_acquisition) == True, \
             "Service %s is not exist" % service.V2_stop_acquisition
 
+        assert service_is_running(service.V2_save_last_frame) == True, \
+            "Service %s is not exist" % service.V2_save_last_frame
+
     def test5_parameter_server_variables_exist(self):
         """
         test if variables exist in parameter server
@@ -146,8 +153,8 @@ class Test_phoxi_camera_interfaces(TestCase):
         assert rospy.has_param(param.confidence) == True, \
             "Parameter %s is not exist" % param.confidence
 
-        assert rospy.has_param(param.coordination_space) == True, \
-            "Parameter %s is not exist" % param.coordination_space
+        assert rospy.has_param(param.coordinate_space) == True, \
+            "Parameter %s is not exist" % param.coordinate_space
 
         assert rospy.has_param(param.frame_id) == True, \
             "Parameter %s is not exist" % param.frame_id
