@@ -14,6 +14,8 @@
 #include <cv_bridge/cv_bridge.h>
 #include <eigen_conversions/eigen_msg.h>
 #include <pcl/point_types.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/filters/statistical_outlier_removal.h>
 #include <pcl_ros/point_cloud.h>
 
 //dynamic reconfigure
@@ -89,6 +91,8 @@ namespace phoxi_camera {
     
 	void getExternalCameraFrame();
 
+        void preprocessPointCloud();
+
         int triggerImage();
 
         void triggerScanCallBack(const std_msgs::Int32::ConstPtr& msg);
@@ -110,6 +114,9 @@ namespace phoxi_camera {
 	cv::Mat ex_img;
 
         DepthMapSettings DepthMapSetting;
+
+        pcl::PointCloud<pcl::PointNormal>::Ptr cloud;
+
     private:
         bool getDeviceList(phoxi_camera::GetDeviceList::Request& req, phoxi_camera::GetDeviceList::Response& res);
 

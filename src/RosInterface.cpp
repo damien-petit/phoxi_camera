@@ -391,8 +391,12 @@ namespace phoxi_camera {
             ROS_WARN("Empty point cloud!");
         } else {
             ros::WallTime start_pointcloud_time = ros::WallTime::now();
-            auto cloud = PhoXiInterface::getPointCloudFromFrame(frame, dynamicReconfigureConfig.organized_cloud);
-            sensor_msgs::PointCloud2 output_cloud;
+            //auto cloud = PhoXiInterface::getPointCloudFromFrame(frame, dynamicReconfigureConfig.organized_cloud);
+            
+	    auto tmp = PhoXiInterface::getPointCloudFromFrame(frame, dynamicReconfigureConfig.organized_cloud);
+	    pcl::copyPointCloud(*tmp, *cloud);
+	    preprocessPointCloud();
+	    sensor_msgs::PointCloud2 output_cloud;
             pcl::toROSMsg(*cloud, output_cloud);
             output_cloud.header = header;
             cloudPub.publish(output_cloud);
@@ -888,6 +892,21 @@ namespace phoxi_camera {
     
         external_camera_header = msg->header;
         ex_img = cv_ptr->image.clone();
+    }
+
+    void RosInterface::preprocessPointCloud() {
+        // downsampling
+	pcl::VoxelGrid<pcl::PointNormal> voxelSampler;
+	voxelSampler.setInputCloud(cloud);
+	voxelSampler.setLeafSize(0.002, 0.002, 0.002);
+	voxelSampler.filter(*cloud);
+
+	// outlier remover
+	pcl::StatisticalOutlierRemoval<pcl::PointNormal> sor;
+	sor.setInputCloud(cloud);
+	sor.setMeanK(150);
+	sor.setStddevMulThresh(1.0);
+	sor.filter(*cloud);
     }
 }
 
