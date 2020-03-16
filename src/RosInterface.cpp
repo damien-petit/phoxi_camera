@@ -6,6 +6,7 @@
 
 namespace phoxi_camera {
     RosInterface::RosInterface() : nh("~"), dynamicReconfigureServer(dynamicReconfigureMutex, nh),
+                                   cloud_normal(new pcl::PointCloud<pcl::PointNormal>),
                                    PhoXi3DscannerDiagnosticTask("PhoXi3Dscanner",
                                                                 boost::bind(&RosInterface::diagnosticCallback, this,
                                                                             _1)) {
@@ -394,10 +395,10 @@ namespace phoxi_camera {
             //auto cloud = PhoXiInterface::getPointCloudFromFrame(frame, dynamicReconfigureConfig.organized_cloud);
             
 	    auto tmp = PhoXiInterface::getPointCloudFromFrame(frame, dynamicReconfigureConfig.organized_cloud);
-	    pcl::copyPointCloud(*tmp, *cloud);
+	    pcl::copyPointCloud(*tmp, *cloud_normal);
 	    preprocessPointCloud();
 	    sensor_msgs::PointCloud2 output_cloud;
-            pcl::toROSMsg(*cloud, output_cloud);
+            pcl::toROSMsg(*cloud_normal, output_cloud);
             output_cloud.header = header;
             cloudPub.publish(output_cloud);
             ros::WallTime end_pointcloud_time = ros::WallTime::now();
@@ -897,16 +898,23 @@ namespace phoxi_camera {
     void RosInterface::preprocessPointCloud() {
         // downsampling
 	pcl::VoxelGrid<pcl::PointNormal> voxelSampler;
-	voxelSampler.setInputCloud(cloud);
+	voxelSampler.setInputCloud(cloud_normal);
 	voxelSampler.setLeafSize(0.002, 0.002, 0.002);
-	voxelSampler.filter(*cloud);
+	voxelSampler.filter(*cloud_normal);
 
-	// outlier remover
+	// outlier remover (statistical)
 	pcl::StatisticalOutlierRemoval<pcl::PointNormal> sor;
-	sor.setInputCloud(cloud);
-	sor.setMeanK(150);
-	sor.setStddevMulThresh(1.0);
-	sor.filter(*cloud);
+	sor.setInputCloud(cloud_normal);
+	sor.setMeanK(50);
+	sor.setStddevMulThresh(0.4);
+	sor.filter(*cloud_normal);
+
+        // outlier remover (radius)
+        //pcl::RadiusOutlierRemoval<pcl::PointNormal> outrem;
+        //outrem.setInputCloud(cloud_normal);
+        //outrem.setRadiusSearch(0.8);
+        //outrem.setMinNeighborsInRadius(50);
+        //outrem.filter(*cloud_normal);
     }
 }
 

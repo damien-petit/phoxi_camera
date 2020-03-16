@@ -16,6 +16,7 @@
 #include <pcl/point_types.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/statistical_outlier_removal.h>
+#include <pcl/filters/radius_outlier_removal.h>
 #include <pcl_ros/point_cloud.h>
 
 //dynamic reconfigure
@@ -115,7 +116,7 @@ namespace phoxi_camera {
 
         DepthMapSettings DepthMapSetting;
 
-        pcl::PointCloud<pcl::PointNormal>::Ptr cloud;
+        pcl::PointCloud<pcl::PointNormal>::Ptr cloud_normal;
 
     private:
         bool getDeviceList(phoxi_camera::GetDeviceList::Request& req, phoxi_camera::GetDeviceList::Response& res);
