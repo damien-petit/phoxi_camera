@@ -107,6 +107,8 @@ namespace phoxi_camera {
         void getDefaultDynamicReconfigureConfig(phoxi_camera::phoxi_cameraConfig& config);
 
         std::string frameId;
+
+	bool preprocess;
         
 	bool send_aligned_depth_map;
         
@@ -116,7 +118,7 @@ namespace phoxi_camera {
 
         DepthMapSettings DepthMapSetting;
 
-        pcl::PointCloud<pcl::PointNormal>::Ptr cloud_normal;
+        pcl::PointCloud<pcl::PointNormal>::Ptr cloud_normal_preprocessed;
 
     private:
         bool getDeviceList(phoxi_camera::GetDeviceList::Request& req, phoxi_camera::GetDeviceList::Response& res);

@@ -4,6 +4,7 @@ latch_topics: true
 topic_queue_size: 1
 init_from_config: false # if true all following parameters will be initialized from this config otherwise from PhoXi control application.
 organized_cloud: true # if true organized point cloud will be published, other otherwise unorganized (Default value true)
+preprcess: true # if true point cloud will be downsampled and outlier removed.
 
 # All following parameters are for PhoXi Control and they can override all dynamic_reconfigure parameters in cfg file.
 # This values are set to scanner after successful connection only if init_from_config parameter is true.
@@ -19,8 +20,6 @@ shutter_multiplier: 1
 timeout: -3          # in ms, special parameters: 0 = Zero, -1 = Infinity, -2 = Last stored, -3 = Default
 trigger_mode: 1      # 0 = Free run, 1 = Software
 send_aligned_depth_map: true # if true, acquired data and aligned depth map to external camera will be sent
-#calibration_file: "realsense_calibration.txt"
-#external_camera_topic_name: "/camera/color/image_raw"
 calibration_file: "basler_calibration.txt"
 external_camera_topic_name: "/pylon_camera_node/image_raw"
 

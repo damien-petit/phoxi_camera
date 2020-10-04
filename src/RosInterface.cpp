@@ -6,7 +6,7 @@
 
 namespace phoxi_camera {
     RosInterface::RosInterface() : nh("~"), dynamicReconfigureServer(dynamicReconfigureMutex, nh),
-                                   cloud_normal(new pcl::PointCloud<pcl::PointNormal>),
+                                   cloud_normal_preprocessed(new pcl::PointCloud<pcl::PointNormal>),
                                    PhoXi3DscannerDiagnosticTask("PhoXi3Dscanner",
                                                                 boost::bind(&RosInterface::diagnosticCallback, this,
                                                                             _1)) {
@@ -63,6 +63,7 @@ namespace phoxi_camera {
 
         nh.param<std::string>("frame_id", frameId, "PhoXi3Dscanner_sensor");
         nh.param<bool>("send_aligned_depth_map", send_aligned_depth_map, false);
+        nh.param<bool>("preprocess", preprocess, false);
 
         //connect to default scanner
         std::string scannerId;
@@ -394,11 +395,16 @@ namespace phoxi_camera {
             ros::WallTime start_pointcloud_time = ros::WallTime::now();
             //auto cloud = PhoXiInterface::getPointCloudFromFrame(frame, dynamicReconfigureConfig.organized_cloud);
             
-	    auto tmp = PhoXiInterface::getPointCloudFromFrame(frame, dynamicReconfigureConfig.organized_cloud);
-	    pcl::copyPointCloud(*tmp, *cloud_normal);
-	    preprocessPointCloud();
+	    auto cloud_normal_raw = PhoXiInterface::getPointCloudFromFrame(frame, dynamicReconfigureConfig.organized_cloud);
 	    sensor_msgs::PointCloud2 output_cloud;
-            pcl::toROSMsg(*cloud_normal, output_cloud);
+	    if (preprocess) {
+	        pcl::copyPointCloud(*cloud_normal_raw, *cloud_normal_preprocessed);
+	        preprocessPointCloud();
+                pcl::toROSMsg(*cloud_normal_preprocessed, output_cloud);
+	    }
+	    else {
+	        pcl::toROSMsg(*cloud_normal_raw, output_cloud);
+	    }
             output_cloud.header = header;
             cloudPub.publish(output_cloud);
             ros::WallTime end_pointcloud_time = ros::WallTime::now();
@@ -898,16 +904,16 @@ namespace phoxi_camera {
     void RosInterface::preprocessPointCloud() {
         // downsampling
 	pcl::VoxelGrid<pcl::PointNormal> voxelSampler;
-	voxelSampler.setInputCloud(cloud_normal);
+	voxelSampler.setInputCloud(cloud_normal_preprocessed);
 	voxelSampler.setLeafSize(0.002, 0.002, 0.002);
-	voxelSampler.filter(*cloud_normal);
+	voxelSampler.filter(*cloud_normal_preprocessed);
 
 	// outlier remover (statistical)
 	pcl::StatisticalOutlierRemoval<pcl::PointNormal> sor;
-	sor.setInputCloud(cloud_normal);
+	sor.setInputCloud(cloud_normal_preprocessed);
 	sor.setMeanK(50);
 	sor.setStddevMulThresh(0.4);
-	sor.filter(*cloud_normal);
+	sor.filter(*cloud_normal_preprocessed);
 
         // outlier remover (radius)
         //pcl::RadiusOutlierRemoval<pcl::PointNormal> outrem;
