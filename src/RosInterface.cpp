@@ -356,19 +356,19 @@ namespace phoxi_camera {
             double scan_time = (end_scan_time - start_scan_time).toNSec() * 1e-9;
             ROS_INFO_STREAM("Frame Getting Time(s): " << scan_time);
     
-            std_msgs::Int32 trigger_id;
+    	    ros::WallTime start_build_msg_time = ros::WallTime::now();
+            if (send_aligned_depth_map) publishAlignedDepthMap(frame);
+            publishFrame(frame);
+    	    ros::WallTime end_build_msg_time = ros::WallTime::now();
+            double build_msg_time = (end_build_msg_time - start_build_msg_time).toNSec() * 1e-9;
+            ROS_INFO_STREAM("Building All Msg Time(s): " << build_msg_time);
+            
+	    std_msgs::Int32 trigger_id;
             trigger_id.data = msg->data;
             triggerIdPub.publish(trigger_id);
     
-    	ros::WallTime start_build_msg_time = ros::WallTime::now();
-            if (send_aligned_depth_map) publishAlignedDepthMap(frame);
-            publishFrame(frame);
-    	ros::WallTime end_build_msg_time = ros::WallTime::now();
-            double build_msg_time = (end_build_msg_time - start_build_msg_time).toNSec() * 1e-9;
-            ROS_INFO_STREAM("Building All Msg Time(s): " << build_msg_time);
-    
-    	double total_time = (end_build_msg_time - start_scan_time).toNSec() * 1e-9;
-    	ROS_INFO_STREAM("Total Time(s): " << total_time);
+    	    double total_time = (end_build_msg_time - start_scan_time).toNSec() * 1e-9;
+    	    ROS_INFO_STREAM("Total Time(s): " << total_time);
     
         }catch (PhoXiInterfaceException &e){
             std::cout << "Error Acquiring Data: " << e.what() << std::endl;
