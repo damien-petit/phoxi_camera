@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<launch>
+	<node pkg="rosbag" type="play" name="player" output="screen" args="--loop --clock '$(find phoxi_camera)/rosbag/phoxi_aquisition/2020-10-16-12-45-28.bag' --topics /pylon_camera_node/camera_info /pylon_camera_node/image_raw /pylon_camera_node/image_rect">
+  </node>
+</launch>
