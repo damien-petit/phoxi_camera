@@ -20,8 +20,8 @@ shutter_multiplier: 1
 timeout: -3          # in ms, special parameters: 0 = Zero, -1 = Infinity, -2 = Last stored, -3 = Default
 trigger_mode: 1      # 0 = Free run, 1 = Software
 send_aligned_depth_map: true # if true, acquired data and aligned depth map to external camera will be sent
-calibration_file: "basler_calibration.txt"
-external_camera_topic_name: "/pylon_camera_node/image_raw"
+external_camera_calibration_file: "calibration_parameter_with_external_camera.txt"
+external_camera_topic_name: "/pylon_camera_node/image_rect"
 
 ## Setting available only for PhoXi Control 1.2 and higher. Also for dynamic reconfigure
 coordinate_space: 1 # 1 = Camera, 2 =  Mounting, 3 = Marker, 4 = Robot, 5 = Custom

@@ -71,7 +71,7 @@ enum class DepthMapSettingsResult {
 struct DepthMapSettings {
     pho::api::AdditionalCameraCalibration Calibration;
     pho::api::DepthMap32f DepthMap;
-    int flag = 0;
+    //int flag = 0;
     // int FromFileCameraCount = 0;
     // int FromDeviceCount = 0;
 };
@@ -117,6 +117,8 @@ namespace phoxi_camera {
 	cv::Mat ex_img;
 
         DepthMapSettings DepthMapSetting;
+	cv::Mat map_x;
+	cv::Mat map_y;
 
         pcl::PointCloud<pcl::PointNormal>::Ptr cloud_normal_preprocessed;
 
@@ -215,6 +217,7 @@ namespace phoxi_camera {
         ros::Publisher rgbTexturePub;
         ros::Publisher depthMapPub;
         ros::Publisher alignedDepthMapPub;
+        ros::Publisher alignedDepthMapRectPub;
         ros::Publisher externalCameraTexturePub;
         ros::Publisher triggerIdPub;
 
