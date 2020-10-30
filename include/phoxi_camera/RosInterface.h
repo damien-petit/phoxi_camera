@@ -120,6 +120,9 @@ namespace phoxi_camera {
 	cv::Mat map_x;
 	cv::Mat map_y;
 
+	cv::Mat cameraMatrix;
+	cv::Mat distCoeffs;
+
         pcl::PointCloud<pcl::PointNormal>::Ptr cloud_normal_preprocessed;
 
     private:
@@ -212,10 +215,15 @@ namespace phoxi_camera {
         //ros publishers
         ros::Publisher cloudPub;
         ros::Publisher normalMapPub;
+        ros::Publisher normalMapRectPub;
         ros::Publisher confidenceMapPub;
+        ros::Publisher confidenceMapRectPub;
         ros::Publisher rawTexturePub;
+        ros::Publisher rawTextureRectPub;
         ros::Publisher rgbTexturePub;
+        ros::Publisher rgbTextureRectPub;
         ros::Publisher depthMapPub;
+        ros::Publisher depthMapRectPub;
         ros::Publisher alignedDepthMapPub;
         ros::Publisher alignedDepthMapRectPub;
         ros::Publisher externalCameraTexturePub;
