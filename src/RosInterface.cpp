@@ -480,7 +480,7 @@ namespace phoxi_camera {
                                   frame->Texture.operator[](0));
             cv::normalize(cvGreyTexture, cvGreyTexture, 0, 255, CV_MINMAX);
             cvGreyTexture.convertTo(cvGreyTexture, CV_8U);
-            cv::equalizeHist(cvGreyTexture, cvGreyTexture);
+            //cv::equalizeHist(cvGreyTexture, cvGreyTexture);
             cv::Mat cvRgbTexture;
             cv::cvtColor(cvGreyTexture, cvRgbTexture, CV_GRAY2RGB);
             cv_bridge::CvImage rgbTexture(header, sensor_msgs::image_encodings::RGB8, cvRgbTexture);
