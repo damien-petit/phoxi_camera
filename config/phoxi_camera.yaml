@@ -1,5 +1,5 @@
-#scanner_id: "2019-06-049-LC3" # keep "" if scanner id is number
-scanner_id: "Output" # keep "" if scanner id is number
+scanner_id: "2019-06-049-LC3" # keep "" if scanner id is number
+#scanner_id: "Output" # keep "" if scanner id is number
 frame_id: "PhoXi3Dscanner_sensor"
 latch_topics: true
 topic_queue_size: 1
