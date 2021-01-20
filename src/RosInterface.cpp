@@ -493,7 +493,7 @@ namespace phoxi_camera {
         }
     
         if (DepthMapSetting.flag == 0) getDepthMapSetting();
-        getExternalCameraFrame();
+        //getExternalCameraFrame();
     
         pho::api::AdditionalCamera::Aligner Aligner(scanner, DepthMapSetting.Calibration);
         if (!(Aligner.GetAlignedDepthMap(DepthMapSetting.DepthMap)))
