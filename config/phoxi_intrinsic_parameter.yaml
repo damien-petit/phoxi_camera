@@ -1,0 +1,20 @@
+image_width: 2064
+image_height: 1544
+camera_name: PhoXi3DScan-2019-06-049-LC3
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [2262.47, 0, 1047.86, 0, 2262.7, 814.839, 0, 0, 1]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [-0.121101, 0.18328, 0.000212515, -0.000313851, -0.0693]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1, 0, 0, 0, 1, 0, 0, 0, 1]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [2262.47, 0, 1047.86, 0, 2262.7, 814.839, 0, 0, 1]
