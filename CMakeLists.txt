@@ -18,6 +18,7 @@ find_package(catkin REQUIRED
     eigen_conversions
     cv_bridge
     message_generation
+    phoxi_camera_msgs
 )
 
 catkin_python_setup()
@@ -30,39 +31,39 @@ include_directories(include
   ${Eigen_INCLUDE_DIRS}
 )
 
-add_message_files(
-  FILES
-    PhoXiSize.msg
-    DeviceConnectionStatus.msg
-    DeviceType.msg
-    DeviceInformation.msg
-)
-
-add_service_files(
-  FILES
-    Deprecated/Empty.srv        #deprecated
-    Deprecated/IsConnected.srv  #deprecated
-    Deprecated/IsAcquiring.srv  #deprecated
-    ConnectCamera.srv
-    TriggerImage.srv
-    GetDeviceList.srv
-    GetBool.srv
-    GetAlignedDepthMap.srv
-    GetFrame.srv
-    GetHardwareIdentification.srv
-    GetSupportedCapturingModes.srv
-    SaveFrame.srv
-    SaveLastFrame.srv
-    SetCoordinatesSpace.srv
-    SetTransformationMatrix.srv
-    GetString.srv
-)
-
-generate_messages(
-  DEPENDENCIES
-    std_msgs
-    sensor_msgs
-)
+#add_message_files(
+#  FILES
+#    PhoXiSize.msg
+#    DeviceConnectionStatus.msg
+#    DeviceType.msg
+#    DeviceInformation.msg
+#)
+#
+#add_service_files(
+#  FILES
+#    Deprecated/Empty.srv        #deprecated
+#    Deprecated/IsConnected.srv  #deprecated
+#    Deprecated/IsAcquiring.srv  #deprecated
+#    ConnectCamera.srv
+#    TriggerImage.srv
+#    GetDeviceList.srv
+#    GetBool.srv
+#    GetAlignedDepthMap.srv
+#    GetFrame.srv
+#    GetHardwareIdentification.srv
+#    GetSupportedCapturingModes.srv
+#    SaveFrame.srv
+#    SaveLastFrame.srv
+#    SetCoordinatesSpace.srv
+#    SetTransformationMatrix.srv
+#    GetString.srv
+#)
+#
+#generate_messages(
+#  DEPENDENCIES
+#    std_msgs
+#    sensor_msgs
+#)
 
 generate_dynamic_reconfigure_options(
   cfg/phoxi_camera.cfg

@@ -14,14 +14,14 @@ namespace phoxi_camera {
         //create service servers
         getDeviceListService = nh.advertiseService("get_device_list", &RosInterface::getDeviceList, this);
         connectCameraService =nh.advertiseService("connect_camera", &RosInterface::connectCamera, this);
-        isConnectedService = nh.advertiseService("is_connected", (bool (RosInterface::*)(phoxi_camera::IsConnected::Request&, phoxi_camera::IsConnected::Response&))&RosInterface::isConnected, this);
-        isAcquiringService = nh.advertiseService("is_acquiring", (bool (RosInterface::*)(phoxi_camera::IsAcquiring::Request&, phoxi_camera::IsAcquiring::Response&))&RosInterface::isAcquiring, this);
-        isConnectedServiceV2 = nh.advertiseService("V2/is_connected", (bool (RosInterface::*)(phoxi_camera::GetBool::Request&, phoxi_camera::GetBool::Response&))&RosInterface::isConnected, this);
-        isAcquiringServiceV2 = nh.advertiseService("V2/is_acquiring", (bool (RosInterface::*)(phoxi_camera::GetBool::Request&, phoxi_camera::GetBool::Response&))&RosInterface::isAcquiring, this);
+        isConnectedService = nh.advertiseService("is_connected", (bool (RosInterface::*)(phoxi_camera_msgs::IsConnected::Request&, phoxi_camera_msgs::IsConnected::Response&))&RosInterface::isConnected, this);
+        isAcquiringService = nh.advertiseService("is_acquiring", (bool (RosInterface::*)(phoxi_camera_msgs::IsAcquiring::Request&, phoxi_camera_msgs::IsAcquiring::Response&))&RosInterface::isAcquiring, this);
+        isConnectedServiceV2 = nh.advertiseService("V2/is_connected", (bool (RosInterface::*)(phoxi_camera_msgs::GetBool::Request&, phoxi_camera_msgs::GetBool::Response&))&RosInterface::isConnected, this);
+        isAcquiringServiceV2 = nh.advertiseService("V2/is_acquiring", (bool (RosInterface::*)(phoxi_camera_msgs::GetBool::Request&, phoxi_camera_msgs::GetBool::Response&))&RosInterface::isAcquiring, this);
         startAcquisitionService = nh.advertiseService("start_acquisition", (bool (RosInterface::*)(std_srvs::Empty::Request&, std_srvs::Empty::Response&))&RosInterface::startAcquisition, this);
         stopAcquisitionService = nh.advertiseService("stop_acquisition", (bool (RosInterface::*)(std_srvs::Empty::Request&, std_srvs::Empty::Response&))&RosInterface::stopAcquisition, this);
-        startAcquisitionServiceV2 = nh.advertiseService("V2/start_acquisition", (bool (RosInterface::*)(phoxi_camera::Empty::Request&, phoxi_camera::Empty::Response&))&RosInterface::startAcquisition, this);
-        stopAcquisitionServiceV2 = nh.advertiseService("V2/stop_acquisition", (bool (RosInterface::*)(phoxi_camera::Empty::Request&, phoxi_camera::Empty::Response&))&RosInterface::stopAcquisition, this);
+        startAcquisitionServiceV2 = nh.advertiseService("V2/start_acquisition", (bool (RosInterface::*)(phoxi_camera_msgs::Empty::Request&, phoxi_camera_msgs::Empty::Response&))&RosInterface::startAcquisition, this);
+        stopAcquisitionServiceV2 = nh.advertiseService("V2/stop_acquisition", (bool (RosInterface::*)(phoxi_camera_msgs::Empty::Request&, phoxi_camera_msgs::Empty::Response&))&RosInterface::stopAcquisition, this);
         triggerImageService =nh.advertiseService("trigger_image", &RosInterface::triggerImage, this);
         getFrameService = nh.advertiseService("get_frame", &RosInterface::getFrame, this);
         getAlignedDepthMapService = nh.advertiseService("get_aligned_depth_map", &RosInterface::getAlignedDepthMap, this);
@@ -99,7 +99,7 @@ namespace phoxi_camera {
     }
 
     bool
-    RosInterface::getDeviceList(phoxi_camera::GetDeviceList::Request& req, phoxi_camera::GetDeviceList::Response& res) {
+    RosInterface::getDeviceList(phoxi_camera_msgs::GetDeviceList::Request& req, phoxi_camera_msgs::GetDeviceList::Response& res) {
         try {
             res.out = PhoXiInterface::cameraList();
             phoXiDeviceInforamtionToRosMsg(PhoXiInterface::deviceList(), res.device_information_list);
@@ -114,7 +114,7 @@ namespace phoxi_camera {
     }
 
     bool
-    RosInterface::connectCamera(phoxi_camera::ConnectCamera::Request& req, phoxi_camera::ConnectCamera::Response& res) {
+    RosInterface::connectCamera(phoxi_camera_msgs::ConnectCamera::Request& req, phoxi_camera_msgs::ConnectCamera::Response& res) {
         try {
             RosInterface::connectCamera(req.name);
             res.success = true;
@@ -126,24 +126,24 @@ namespace phoxi_camera {
         return true;
     }
 
-    bool RosInterface::isConnected(phoxi_camera::IsConnected::Request& req, phoxi_camera::IsConnected::Response& res) {
+    bool RosInterface::isConnected(phoxi_camera_msgs::IsConnected::Request& req, phoxi_camera_msgs::IsConnected::Response& res) {
         res.connected = PhoXiInterface::isConnected();
         return true;
     }
 
-    bool RosInterface::isAcquiring(phoxi_camera::IsAcquiring::Request& req, phoxi_camera::IsAcquiring::Response& res) {
+    bool RosInterface::isAcquiring(phoxi_camera_msgs::IsAcquiring::Request& req, phoxi_camera_msgs::IsAcquiring::Response& res) {
         res.is_acquiring = PhoXiInterface::isAcquiring();
         return true;
     }
 
-    bool RosInterface::isConnected(phoxi_camera::GetBool::Request& req, phoxi_camera::GetBool::Response& res) {
+    bool RosInterface::isConnected(phoxi_camera_msgs::GetBool::Request& req, phoxi_camera_msgs::GetBool::Response& res) {
         res.value = PhoXiInterface::isConnected();
         res.message = OKRESPONSE; //todo tot este premysliet
         res.success = true;
         return true;
     }
 
-    bool RosInterface::isAcquiring(phoxi_camera::GetBool::Request& req, phoxi_camera::GetBool::Response& res) {
+    bool RosInterface::isAcquiring(phoxi_camera_msgs::GetBool::Request& req, phoxi_camera_msgs::GetBool::Response& res) {
         res.value = PhoXiInterface::isAcquiring();
         res.message = OKRESPONSE; //todo tot este premysliet
         res.success = true;
@@ -174,7 +174,7 @@ namespace phoxi_camera {
         return true;
     }
 
-    bool RosInterface::startAcquisition(phoxi_camera::Empty::Request& req, phoxi_camera::Empty::Response& res) {
+    bool RosInterface::startAcquisition(phoxi_camera_msgs::Empty::Request& req, phoxi_camera_msgs::Empty::Response& res) {
         try {
             dynamicReconfigureConfig.start_acquisition = true;
             dynamicReconfigureServer.updateConfig(dynamicReconfigureConfig);
@@ -188,7 +188,7 @@ namespace phoxi_camera {
         return true;
     }
 
-    bool RosInterface::stopAcquisition(phoxi_camera::Empty::Request& req, phoxi_camera::Empty::Response& res) {
+    bool RosInterface::stopAcquisition(phoxi_camera_msgs::Empty::Request& req, phoxi_camera_msgs::Empty::Response& res) {
         try {
             dynamicReconfigureConfig.start_acquisition = false;
             dynamicReconfigureServer.updateConfig(dynamicReconfigureConfig);
@@ -203,7 +203,7 @@ namespace phoxi_camera {
     }
 
     bool
-    RosInterface::triggerImage(phoxi_camera::TriggerImage::Request& req, phoxi_camera::TriggerImage::Response& res) {
+    RosInterface::triggerImage(phoxi_camera_msgs::TriggerImage::Request& req, phoxi_camera_msgs::TriggerImage::Response& res) {
         try {
             res.id = RosInterface::triggerImage();
             res.success = true;
@@ -216,7 +216,7 @@ namespace phoxi_camera {
         return true;
     }
 
-    bool RosInterface::getFrame(phoxi_camera::GetFrame::Request &req, phoxi_camera::GetFrame::Response &res){
+    bool RosInterface::getFrame(phoxi_camera_msgs::GetFrame::Request &req, phoxi_camera_msgs::GetFrame::Response &res){
         try {
             ros::WallTime start_scan_time = ros::WallTime::now();
             pho::api::PFrame frame = getPFrame(req.in);
@@ -250,7 +250,7 @@ namespace phoxi_camera {
         return true;
     }
 
-    bool RosInterface::getAlignedDepthMap(phoxi_camera::GetAlignedDepthMap::Request &req, phoxi_camera::GetAlignedDepthMap::Response &res){
+    bool RosInterface::getAlignedDepthMap(phoxi_camera_msgs::GetAlignedDepthMap::Request &req, phoxi_camera_msgs::GetAlignedDepthMap::Response &res){
         try {
             pho::api::PFrame frame = getPFrame(req.in);
             publishAlignedDepthMap(frame);
@@ -268,7 +268,7 @@ namespace phoxi_camera {
         return true;
     }    
 
-    bool RosInterface::saveFrame(phoxi_camera::SaveFrame::Request& req, phoxi_camera::SaveFrame::Response& res) {
+    bool RosInterface::saveFrame(phoxi_camera_msgs::SaveFrame::Request& req, phoxi_camera_msgs::SaveFrame::Response& res) {
         try {
             pho::api::PFrame frame = RosInterface::getPFrame(req.in);
             if (!frame) {
@@ -307,8 +307,8 @@ namespace phoxi_camera {
         return true;
     }
 
-    bool RosInterface::getHardwareIdentification(phoxi_camera::GetHardwareIdentification::Request& req,
-                                                 phoxi_camera::GetHardwareIdentification::Response& res) {
+    bool RosInterface::getHardwareIdentification(phoxi_camera_msgs::GetHardwareIdentification::Request& req,
+                                                 phoxi_camera_msgs::GetHardwareIdentification::Response& res) {
         try {
             res.hardware_identification = PhoXiInterface::getHardwareIdentification();
             res.success = true;
@@ -320,12 +320,12 @@ namespace phoxi_camera {
         return true;
     }
 
-    bool RosInterface::getSupportedCapturingModes(phoxi_camera::GetSupportedCapturingModes::Request& req,
-                                                  phoxi_camera::GetSupportedCapturingModes::Response& res) {
+    bool RosInterface::getSupportedCapturingModes(phoxi_camera_msgs::GetSupportedCapturingModes::Request& req,
+                                                  phoxi_camera_msgs::GetSupportedCapturingModes::Response& res) {
         try {
             std::vector<pho::api::PhoXiCapturingMode> modes = PhoXiInterface::getSupportedCapturingModes();
             for (int i = 0; i < modes.size(); i++) {
-                phoxi_camera::PhoXiSize size;
+                phoxi_camera_msgs::PhoXiSize size;
                 size.Height = modes[i].Resolution.Height;
                 size.Width = modes[i].Resolution.Width;
                 res.supported_capturing_modes.push_back(size);
@@ -339,14 +339,14 @@ namespace phoxi_camera {
         return true;
     }
 
-    bool RosInterface::getApiVersion(phoxi_camera::GetString::Request& req, phoxi_camera::GetString::Response& res) {
+    bool RosInterface::getApiVersion(phoxi_camera_msgs::GetString::Request& req, phoxi_camera_msgs::GetString::Response& res) {
         res.value = PhoXiInterface::getApiVersion();
         res.success = true;
         return true;
     }
 
     bool
-    RosInterface::getFirmwareVersion(phoxi_camera::GetString::Request& req, phoxi_camera::GetString::Response& res) {
+    RosInterface::getFirmwareVersion(phoxi_camera_msgs::GetString::Request& req, phoxi_camera_msgs::GetString::Response& res) {
         try {
             auto dl = PhoXiInterface::deviceList();
             auto it = std::find(dl.begin(), dl.end(), PhoXiInterface::getHardwareIdentification());
@@ -839,8 +839,8 @@ namespace phoxi_camera {
 
 #ifndef PHOXI_API_v1_1
 
-    bool RosInterface::setCoordianteSpace(phoxi_camera::SetCoordinatesSpace::Request& req,
-                                          phoxi_camera::SetCoordinatesSpace::Response& res) {
+    bool RosInterface::setCoordianteSpace(phoxi_camera_msgs::SetCoordinatesSpace::Request& req,
+                                          phoxi_camera_msgs::SetCoordinatesSpace::Response& res) {
         try {
             PhoXiInterface::setCoordinateSpace(req.coordinates_space);
             //update dynamic reconfigure
@@ -855,8 +855,8 @@ namespace phoxi_camera {
         return true;
     }
 
-    bool RosInterface::setTransformation(phoxi_camera::SetTransformationMatrix::Request& req,
-                                         phoxi_camera::SetTransformationMatrix::Response& res) {
+    bool RosInterface::setTransformation(phoxi_camera_msgs::SetTransformationMatrix::Request& req,
+                                         phoxi_camera_msgs::SetTransformationMatrix::Response& res) {
         try {
             Eigen::Affine3d transform;
             tf::transformMsgToEigen(req.transform, transform);
@@ -877,7 +877,7 @@ namespace phoxi_camera {
     }
 
     bool
-    RosInterface::saveLastFrame(phoxi_camera::SaveLastFrame::Request& req, phoxi_camera::SaveLastFrame::Response& res) {
+    RosInterface::saveLastFrame(phoxi_camera_msgs::SaveLastFrame::Request& req, phoxi_camera_msgs::SaveLastFrame::Response& res) {
         std::string file_path = req.file_path;
 
         try {

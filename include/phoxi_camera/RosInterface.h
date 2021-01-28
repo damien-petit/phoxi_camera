@@ -34,22 +34,22 @@
 #include <std_msgs/Int32.h>
 #include <std_srvs/Empty.h>
 #include <phoxi_camera/PhoXiInterface.h>
-#include <phoxi_camera/GetDeviceList.h>
-#include <phoxi_camera/ConnectCamera.h>
-#include <phoxi_camera/IsConnected.h>
-#include <phoxi_camera/IsAcquiring.h>
-#include <phoxi_camera/GetBool.h>
-#include <phoxi_camera/Empty.h>
-#include <phoxi_camera/TriggerImage.h>
-#include <phoxi_camera/GetAlignedDepthMap.h>
-#include <phoxi_camera/GetFrame.h>
-#include <phoxi_camera/SaveFrame.h>
-#include <phoxi_camera/SaveLastFrame.h>
-#include <phoxi_camera/GetHardwareIdentification.h>
-#include <phoxi_camera/GetSupportedCapturingModes.h>
-#include <phoxi_camera/SetCoordinatesSpace.h>
-#include <phoxi_camera/SetTransformationMatrix.h>
-#include <phoxi_camera/GetString.h>
+#include <phoxi_camera_msgs/GetDeviceList.h>
+#include <phoxi_camera_msgs/ConnectCamera.h>
+#include <phoxi_camera_msgs/IsConnected.h>
+#include <phoxi_camera_msgs/IsAcquiring.h>
+#include <phoxi_camera_msgs/GetBool.h>
+#include <phoxi_camera_msgs/Empty.h>
+#include <phoxi_camera_msgs/TriggerImage.h>
+#include <phoxi_camera_msgs/GetAlignedDepthMap.h>
+#include <phoxi_camera_msgs/GetFrame.h>
+#include <phoxi_camera_msgs/SaveFrame.h>
+#include <phoxi_camera_msgs/SaveLastFrame.h>
+#include <phoxi_camera_msgs/GetHardwareIdentification.h>
+#include <phoxi_camera_msgs/GetSupportedCapturingModes.h>
+#include <phoxi_camera_msgs/SetCoordinatesSpace.h>
+#include <phoxi_camera_msgs/SetTransformationMatrix.h>
+#include <phoxi_camera_msgs/GetString.h>
 
 //std
 #include <vector>
@@ -126,45 +126,45 @@ namespace phoxi_camera {
         pcl::PointCloud<pcl::PointNormal>::Ptr cloud_normal_preprocessed;
 
     private:
-        bool getDeviceList(phoxi_camera::GetDeviceList::Request& req, phoxi_camera::GetDeviceList::Response& res);
+        bool getDeviceList(phoxi_camera_msgs::GetDeviceList::Request& req, phoxi_camera_msgs::GetDeviceList::Response& res);
 
-        bool connectCamera(phoxi_camera::ConnectCamera::Request& req, phoxi_camera::ConnectCamera::Response& res);
+        bool connectCamera(phoxi_camera_msgs::ConnectCamera::Request& req, phoxi_camera_msgs::ConnectCamera::Response& res);
 
-        bool isConnected(phoxi_camera::IsConnected::Request& req, phoxi_camera::IsConnected::Response& res);
+        bool isConnected(phoxi_camera_msgs::IsConnected::Request& req, phoxi_camera_msgs::IsConnected::Response& res);
 
-        bool isAcquiring(phoxi_camera::IsAcquiring::Request& req, phoxi_camera::IsAcquiring::Response& res);
+        bool isAcquiring(phoxi_camera_msgs::IsAcquiring::Request& req, phoxi_camera_msgs::IsAcquiring::Response& res);
 
-        bool isConnected(phoxi_camera::GetBool::Request& req, phoxi_camera::GetBool::Response& res);
+        bool isConnected(phoxi_camera_msgs::GetBool::Request& req, phoxi_camera_msgs::GetBool::Response& res);
 
-        bool isAcquiring(phoxi_camera::GetBool::Request& req, phoxi_camera::GetBool::Response& res);
+        bool isAcquiring(phoxi_camera_msgs::GetBool::Request& req, phoxi_camera_msgs::GetBool::Response& res);
 
         bool startAcquisition(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
 
         bool stopAcquisition(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
 
-        bool startAcquisition(phoxi_camera::Empty::Request& req, phoxi_camera::Empty::Response& res);
+        bool startAcquisition(phoxi_camera_msgs::Empty::Request& req, phoxi_camera_msgs::Empty::Response& res);
 
-        bool stopAcquisition(phoxi_camera::Empty::Request& req, phoxi_camera::Empty::Response& res);
+        bool stopAcquisition(phoxi_camera_msgs::Empty::Request& req, phoxi_camera_msgs::Empty::Response& res);
 
-        bool triggerImage(phoxi_camera::TriggerImage::Request& req, phoxi_camera::TriggerImage::Response& res);
+        bool triggerImage(phoxi_camera_msgs::TriggerImage::Request& req, phoxi_camera_msgs::TriggerImage::Response& res);
 
-        bool getFrame(phoxi_camera::GetFrame::Request& req, phoxi_camera::GetFrame::Response& res);
+        bool getFrame(phoxi_camera_msgs::GetFrame::Request& req, phoxi_camera_msgs::GetFrame::Response& res);
 
-        bool getAlignedDepthMap(phoxi_camera::GetAlignedDepthMap::Request &req, phoxi_camera::GetAlignedDepthMap::Response &res);
+        bool getAlignedDepthMap(phoxi_camera_msgs::GetAlignedDepthMap::Request &req, phoxi_camera_msgs::GetAlignedDepthMap::Response &res);
         
-	bool saveFrame(phoxi_camera::SaveFrame::Request& req, phoxi_camera::SaveFrame::Response& res);
+	bool saveFrame(phoxi_camera_msgs::SaveFrame::Request& req, phoxi_camera_msgs::SaveFrame::Response& res);
 
         bool disconnectCamera(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
 
-        bool getHardwareIdentification(phoxi_camera::GetHardwareIdentification::Request& req,
-                                       phoxi_camera::GetHardwareIdentification::Response& res);
+        bool getHardwareIdentification(phoxi_camera_msgs::GetHardwareIdentification::Request& req,
+                                       phoxi_camera_msgs::GetHardwareIdentification::Response& res);
 
-        bool getSupportedCapturingModes(phoxi_camera::GetSupportedCapturingModes::Request& req,
-                                        phoxi_camera::GetSupportedCapturingModes::Response& res);
+        bool getSupportedCapturingModes(phoxi_camera_msgs::GetSupportedCapturingModes::Request& req,
+                                        phoxi_camera_msgs::GetSupportedCapturingModes::Response& res);
 
-        bool getApiVersion(phoxi_camera::GetString::Request& req, phoxi_camera::GetString::Response& res);
+        bool getApiVersion(phoxi_camera_msgs::GetString::Request& req, phoxi_camera_msgs::GetString::Response& res);
 
-        bool getFirmwareVersion(phoxi_camera::GetString::Request& req, phoxi_camera::GetString::Response& res);
+        bool getFirmwareVersion(phoxi_camera_msgs::GetString::Request& req, phoxi_camera_msgs::GetString::Response& res);
 
         void dynamicReconfigureCallback(phoxi_camera::phoxi_cameraConfig& config, uint32_t level);
 
@@ -176,13 +176,13 @@ namespace phoxi_camera {
 
 #ifndef PHOXI_API_v1_1
 
-        bool setCoordianteSpace(phoxi_camera::SetCoordinatesSpace::Request& req,
-                                phoxi_camera::SetCoordinatesSpace::Response& res);
+        bool setCoordianteSpace(phoxi_camera_msgs::SetCoordinatesSpace::Request& req,
+                                phoxi_camera_msgs::SetCoordinatesSpace::Response& res);
 
-        bool setTransformation(phoxi_camera::SetTransformationMatrix::Request& req,
-                               phoxi_camera::SetTransformationMatrix::Response& res);
+        bool setTransformation(phoxi_camera_msgs::SetTransformationMatrix::Request& req,
+                               phoxi_camera_msgs::SetTransformationMatrix::Response& res);
 
-        bool saveLastFrame(phoxi_camera::SaveLastFrame::Request& req, phoxi_camera::SaveLastFrame::Response& res);
+        bool saveLastFrame(phoxi_camera_msgs::SaveLastFrame::Request& req, phoxi_camera_msgs::SaveLastFrame::Response& res);
 
 #endif
         //node handle

@@ -5,11 +5,11 @@
 #ifndef PROJECT_ROSCONVERSIONS_H
 #define PROJECT_ROSCONVERSIONS_H
 
-#include <phoxi_camera/DeviceInformation.h>
+#include <phoxi_camera_msgs/DeviceInformation.h>
 #include <phoxi_camera/PhoXiDeviceInformation.h>
 
 void phoXiDeviceInforamtionToRosMsg(const phoxi_camera::PhoXiDeviceInformation& phoXiDeviceInformation,
-                                    phoxi_camera::DeviceInformation& deviceInformationMsg) {
+                                    phoxi_camera_msgs::DeviceInformation& deviceInformationMsg) {
 
     deviceInformationMsg.name = phoXiDeviceInformation.name;
     deviceInformationMsg.type.type = (int)phoXiDeviceInformation.type;
@@ -20,7 +20,7 @@ void phoXiDeviceInforamtionToRosMsg(const phoxi_camera::PhoXiDeviceInformation& 
 }
 
 void phoXiDeviceInforamtionToRosMsg(const std::vector<phoxi_camera::PhoXiDeviceInformation>& phoXiDeviceInformation,
-                                    std::vector<phoxi_camera::DeviceInformation>& deviceInformationMsg) {
+                                    std::vector<phoxi_camera_msgs::DeviceInformation>& deviceInformationMsg) {
     deviceInformationMsg.clear();
     deviceInformationMsg.resize(phoXiDeviceInformation.size());
     for (const auto& device : phoXiDeviceInformation) {
